@@ -1,7 +1,7 @@
 "use client"
 
 import { useApp } from "@/context/app-context"
-import { Search, UserPlus, UserCheck, UserX, Check, X } from "lucide-react"
+import { Search, UserPlus, UserCheck, UserX, Check, X, Loader2 } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -11,6 +11,7 @@ export default function FriendRequestsView() {
     const [searchQuery, setSearchQuery] = useState("")
     const [newFriendEmail, setNewFriendEmail] = useState("")
     const [isSending, setIsSending] = useState(false)
+    const [successMessage, setSuccessMessage] = useState("")
 
     const receivedRequests = Array.isArray(friendRequests) ? friendRequests.filter(req => req.status === "pending") : []
     const sentRequests = Array.isArray(friendRequests) ? friendRequests.filter(req => req.status === "pending" && req.senderId) : []
@@ -22,13 +23,18 @@ export default function FriendRequestsView() {
         }
 
         setIsSending(true)
+        setSuccessMessage("")
         try {
             await sendFriendRequest(newFriendEmail)
             setNewFriendEmail("")
+            setSuccessMessage("Friend request sent successfully!")
             toast.success("Friend request sent!")
+            // Clear success message after 5 seconds
+            setTimeout(() => setSuccessMessage(""), 5000)
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Failed to send request"
             console.error("Send request error:", errorMessage)
+            setSuccessMessage("")
             toast.error(errorMessage)
         } finally {
             setIsSending(false)
@@ -55,11 +61,11 @@ export default function FriendRequestsView() {
 
     return (
         <div className="w-full md:w-96 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            {}
+            { }
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Friend Requests</h1>
 
-                {}
+                { }
                 <div className="mb-4">
                     <div className="flex gap-2">
                         <input
@@ -74,14 +80,24 @@ export default function FriendRequestsView() {
                         <button
                             onClick={handleSendRequest}
                             disabled={isSending}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50"
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition disabled:opacity-50 flex items-center justify-center min-w-[48px]"
                         >
-                            <UserPlus size={20} />
+                            {isSending ? (
+                                <Loader2 size={20} className="animate-spin" />
+                            ) : (
+                                <UserPlus size={20} />
+                            )}
                         </button>
                     </div>
+                    {successMessage && (
+                        <div className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm rounded-lg flex items-center gap-2">
+                            <Check size={16} />
+                            {successMessage}
+                        </div>
+                    )}
                 </div>
 
-                {}
+                { }
                 <div className="flex gap-2">
                     <button
                         onClick={() => setActiveTab("received")}
@@ -104,7 +120,7 @@ export default function FriendRequestsView() {
                 </div>
             </div>
 
-            {}
+            { }
             <div className="flex-1 overflow-y-auto">
                 {activeTab === "received" ? (
                     receivedRequests.length === 0 ? (
@@ -120,7 +136,7 @@ export default function FriendRequestsView() {
                                 className="p-4 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                             >
                                 <div className="flex items-center gap-4">
-                                    {}
+                                    { }
                                     <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                         {request.senderId.avatar ? (
                                             <img src={request.senderId.avatar} alt={request.senderId.name} className="w-full h-full rounded-full object-cover" />
@@ -131,7 +147,7 @@ export default function FriendRequestsView() {
                                         )}
                                     </div>
 
-                                    {}
+                                    { }
                                     <div className="flex-1 min-w-0">
                                         <p className="font-semibold text-gray-900 dark:text-white truncate">
                                             {request.senderId.name}
@@ -141,7 +157,7 @@ export default function FriendRequestsView() {
                                         </p>
                                     </div>
 
-                                    {}
+                                    { }
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleAccept(request._id)}
@@ -176,7 +192,7 @@ export default function FriendRequestsView() {
                                 className="p-4 border-b dark:border-gray-700"
                             >
                                 <div className="flex items-center gap-4">
-                                    {}
+                                    { }
                                     <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                         {request.receiverId ? (
                                             <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
@@ -187,7 +203,7 @@ export default function FriendRequestsView() {
                                         )}
                                     </div>
 
-                                    {}
+                                    { }
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Pending...
