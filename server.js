@@ -25,9 +25,10 @@ app.prepare().then(() => {
   const io = new Server(httpServer, {
     cors: {
       origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.NEXT_PUBLIC_APP_URL, 'https://connectup-chat.onrender.com'] 
+        ? [process.env.NEXT_PUBLIC_APP_URL, 'https://connectup-chat.onrender.com', 'https://connectup-87pt.onrender.com'] 
         : ['http://localhost:3000'],
-      methods: ['GET', 'POST']
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   })
 
