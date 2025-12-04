@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useApp } from "@/context/app-context"
-import { X, Search } from "lucide-react"
+import { X, Search, Loader2 } from "lucide-react"
 
 interface NewChatModalProps {
   onClose: () => void
@@ -12,20 +12,32 @@ export default function NewChatModal({ onClose }: NewChatModalProps) {
   const { searchUsers, createOrSelectChat } = useApp()
   const [searchQuery, setSearchQuery] = useState("")
   const [filteredUsers, setFilteredUsers] = useState<any[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query)
     if (query) {
-      const users = await searchUsers(query)
-      setFilteredUsers(users)
+      setIsSearching(true)
+      try {
+        const users = await searchUsers(query)
+        setFilteredUsers(users)
+      } finally {
+        setIsSearching(false)
+      }
     } else {
       setFilteredUsers([])
     }
   }
 
   const handleSelectUser = async (userId: string) => {
-    await createOrSelectChat(userId)
-    onClose()
+    setIsCreating(true)
+    try {
+      await createOrSelectChat(userId)
+      onClose()
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   return (
@@ -40,7 +52,11 @@ export default function NewChatModal({ onClose }: NewChatModalProps) {
 
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="relative">
-            <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+            {isSearching ? (
+              <Loader2 size={18} className="absolute left-3 top-3 text-green-500 animate-spin" />
+            ) : (
+              <Search size={18} className="absolute left-3 top-3 text-gray-400" />
+            )}
             <input
               type="text"
               placeholder="Search contacts..."
@@ -53,7 +69,14 @@ export default function NewChatModal({ onClose }: NewChatModalProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filteredUsers.filter(user => user?.id).map((user) => (
+          {isCreating && (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center gap-2">
+              <Loader2 className="animate-spin" />
+              <p>Creating chat...</p>
+            </div>
+          )}
+
+          {!isCreating && filteredUsers.filter(user => user?.id).map((user) => (
             <button
               key={user.id}
               onClick={() => handleSelectUser(user.id)}
@@ -70,6 +93,12 @@ export default function NewChatModal({ onClose }: NewChatModalProps) {
               </div>
             </button>
           ))}
+
+          {!isCreating && searchQuery && !isSearching && filteredUsers.length === 0 && (
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+              No users found
+            </div>
+          )}
         </div>
       </div>
     </div>
