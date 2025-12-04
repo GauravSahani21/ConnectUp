@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
-import { writeFile, mkdir } from "fs/promises"
-import path from "path"
+import { uploadToCloudinary } from "@/lib/cloudinary"
 
 export async function POST(req: Request) {
     try {
@@ -11,31 +10,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "No file uploaded" }, { status: 400 })
         }
 
-        
+        // Validate file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
             return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 })
         }
 
-        
-        const uploadsDir = path.join(process.cwd(), "public", "uploads")
-        try {
-            await mkdir(uploadsDir, { recursive: true })
-        } catch (err) {
-            
-        }
+        // Upload to Cloudinary
+        const result = await uploadToCloudinary(file, "connectup_uploads")
 
-        
-        const timestamp = Date.now()
-        const originalName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-        const filename = `${timestamp}-${originalName}`
-        const filepath = path.join(uploadsDir, filename)
-
-        
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-        await writeFile(filepath, buffer)
-
-        
         const mimeType = file.type
         let type = "file"
         if (mimeType.startsWith("image/")) {
@@ -48,11 +30,9 @@ export async function POST(req: Request) {
             type = "document"
         }
 
-        const url = `/uploads/${filename}`
-
         return NextResponse.json({
             success: true,
-            url,
+            url: result.secure_url, // Cloudinary URL
             type,
             filename: file.name,
             size: file.size,
