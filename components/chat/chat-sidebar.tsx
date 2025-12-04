@@ -51,7 +51,7 @@ export default function ChatSidebar({ view, onViewChange }: ChatSidebarProps) {
   return (
     <>
       <div className="w-full md:w-80 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-        {}
+        { }
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Chats</h1>
@@ -62,7 +62,7 @@ export default function ChatSidebar({ view, onViewChange }: ChatSidebarProps) {
               >
                 <Plus size={20} className="text-green-600" />
               </button>
-              <div className="hidden md:block relative">
+              <div className="relative">
                 <button
                   onClick={() => setShowMenu(!showMenu)}
                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
@@ -81,7 +81,7 @@ export default function ChatSidebar({ view, onViewChange }: ChatSidebarProps) {
             </div>
           </div>
 
-          {}
+          { }
           <div className="relative">
             <Search size={18} className="absolute left-3 top-3 text-gray-400" />
             <input
@@ -94,7 +94,7 @@ export default function ChatSidebar({ view, onViewChange }: ChatSidebarProps) {
           </div>
         </div>
 
-        {}
+        { }
         <div className="flex-1 overflow-y-auto">
           {pinnedChats.length > 0 && (
             <>
@@ -137,7 +137,7 @@ export default function ChatSidebar({ view, onViewChange }: ChatSidebarProps) {
         </div>
       </div>
 
-      {}
+      { }
       {showNewChatModal && <NewChatModal onClose={() => setShowNewChatModal(false)} />}
     </>
   )
