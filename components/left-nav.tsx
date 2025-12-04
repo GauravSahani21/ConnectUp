@@ -10,7 +10,7 @@ interface LeftNavProps {
     onNewChat?: () => void
 }
 
-// Notification Badge Component
+
 function NotificationBadge({ count }: { count: number }) {
     if (count === 0) return null
 
@@ -24,12 +24,12 @@ function NotificationBadge({ count }: { count: number }) {
 export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNavProps) {
     const { friendRequests, chats, messages } = useApp()
 
-    // Calculate pending friend requests count (only received requests)
+    
     const friendRequestCount = useMemo(() => {
         return Array.isArray(friendRequests) ? friendRequests.filter(req => req.status === "pending").length : 0
     }, [friendRequests])
 
-    // Calculate missed calls count (incoming calls with missed status)
+    
     const missedCallsCount = useMemo(() => {
         const lastViewedCalls = localStorage.getItem('connectup-calls-last-viewed')
         const lastViewedTime = lastViewedCalls ? new Date(lastViewedCalls) : new Date(0)
@@ -49,7 +49,7 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
     }, [chats, messages])
 
     const handleViewChange = (view: "chats" | "calls" | "friends" | "settings") => {
-        // Mark calls as viewed when switching to calls view
+        
         if (view === "calls") {
             localStorage.setItem('connectup-calls-last-viewed', new Date().toISOString())
         }
@@ -65,7 +65,7 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
 
     return (
         <>
-            {/* Desktop: Vertical Left Sidebar */}
+            {}
             <div className="hidden md:flex w-16 bg-slate-900 dark:bg-slate-950 flex-col items-center py-4 gap-4">
                 {navItems.map((item) => {
                     const Icon = item.icon
@@ -88,10 +88,10 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
                 })}
             </div>
 
-            {/* Mobile: Bottom Navigation Bar */}
+            {}
             <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 z-50">
                 <div className="flex items-center justify-around px-2 py-2 relative">
-                    {/* Left: Chats & Calls */}
+                    {}
                     <div className="flex gap-1 flex-1 justify-around">
                         {navItems.slice(0, 2).map((item) => {
                             const Icon = item.icon
@@ -114,7 +114,7 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
                         })}
                     </div>
 
-                    {/* Center: FAB for New Chat */}
+                    {}
                     <div className="flex-shrink-0 -mt-8">
                         <button
                             onClick={onNewChat}
@@ -125,7 +125,7 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
                         </button>
                     </div>
 
-                    {/* Right: Friends & Settings */}
+                    {}
                     <div className="flex gap-1 flex-1 justify-around">
                         {navItems.slice(2, 4).map((item) => {
                             const Icon = item.icon

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     console.log("Friend request POST received:", { senderId, receiverEmail })
 
     try {
-        // Find receiver by email
+        
         const receiver = await User.findOne({ email: receiverEmail })
         if (!receiver) {
             return NextResponse.json({ error: "User not found" }, { status: 404 })
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Cannot send friend request to yourself" }, { status: 400 })
         }
 
-        // Check if request already exists
+        
         const existingRequest = await FriendRequest.findOne({
             $or: [
                 { senderId, receiverId: receiver._id, status: "pending" },
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Friend request already pending" }, { status: 400 })
         }
 
-        // Check if already friends (chat exists)
+        
         const existingChat = await Chat.findOne({
             participants: { $all: [senderId, receiver._id] }
         })
@@ -43,17 +43,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "You are already friends" }, { status: 400 })
         }
 
-        // Create request
+        
         const request = await FriendRequest.create({
             senderId,
             receiverId: receiver._id,
             status: "pending"
         })
 
-        // Get sender details for email
+        
         const sender = await User.findById(senderId)
 
-        // Send email notification to receiver (non-blocking)
+        
         if (sender && receiver.email) {
             try {
                 await sendEmail({
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
                 })
             } catch (emailError) {
                 console.error("Failed to send friend request email:", emailError)
-                // Continue execution - don't fail the request if email fails
+                
             }
         }
 
@@ -89,7 +89,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        // Get incoming pending requests
+        
         const requests = await FriendRequest.find({
             receiverId: userId,
             status: "pending"
@@ -116,7 +116,7 @@ export async function PUT(req: Request) {
         await request.save()
 
         if (status === "accepted") {
-            // Create chat
+            
             const chat = await Chat.create({
                 participants: [request.senderId, request.receiverId],
                 unreadCounts: {
@@ -125,7 +125,7 @@ export async function PUT(req: Request) {
                 }
             })
 
-            // Send email to sender notifying them of acceptance (non-blocking)
+            
             const sender = await User.findById(request.senderId)
             const accepter = await User.findById(request.receiverId)
 
@@ -143,7 +143,7 @@ export async function PUT(req: Request) {
                     })
                 } catch (emailError) {
                     console.error("Failed to send acceptance email:", emailError)
-                    // Continue execution - don't fail the acceptance if email fails
+                    
                 }
             }
 

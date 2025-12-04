@@ -21,11 +21,11 @@ export async function GET(req: Request) {
         .populate("participants", "name avatar status lastSeen email")
         .sort({ updatedAt: -1 })
 
-    // Transform for frontend with proper sorting (pinned first)
+    
     const formattedChats = chats.map(chat => {
         const participant = chat.participants.find((p: any) => p._id.toString() !== userId)
 
-        // Safety check - if no participant found, skip this chat
+        
         if (!participant) return null
 
         const isAI = participant.email === "ai@whatsapp.clone" || participant.email === "ai@assistant.com"
@@ -33,7 +33,7 @@ export async function GET(req: Request) {
         const mutedUntil = chat.mutedBy?.find((m: any) => m.userId.toString() === userId)?.until
         const isMuted = mutedUntil && new Date(mutedUntil) > new Date()
 
-        // Get typing users (exclude current user)
+        
         const typingUsers = chat.typingUsers
             ?.filter((t: any) => t.userId.toString() !== userId)
             ?.map((t: any) => t.userId) || []
@@ -55,14 +55,14 @@ export async function GET(req: Request) {
             mutedUntil: isMuted ? mutedUntil : undefined,
             typingUsers
         }
-    }).filter(chat => chat !== null) // Remove null entries
+    }).filter(chat => chat !== null) 
 
-    // Sort: pinned chats first, then by last message time
+    
     formattedChats.sort((a, b) => {
         if (a.pinnedAt && !b.pinnedAt) return -1
         if (!a.pinnedAt && b.pinnedAt) return 1
 
-        // If both pinned (or both unpinned), sort by time
+        
         const aTime = a.lastMessage?.timestamp || 0
         const bTime = b.lastMessage?.timestamp || 0
         return new Date(bTime).getTime() - new Date(aTime).getTime()
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
         })
     }
 
-    // Populate and return similar to GET
+    
     await chat.populate("participants", "name avatar status lastSeen")
     const participant = chat.participants.find((p: any) => p._id.toString() !== currentUserId)
 
@@ -127,9 +127,9 @@ export async function PUT(req: Request) {
             chat.pinnedBy = chat.pinnedBy.filter((id: any) => id.toString() !== userId)
             break
         case "mute":
-            // Remove existing mute for this user
+            
             chat.mutedBy = chat.mutedBy.filter((m: any) => m.userId.toString() !== userId)
-            // Add new mute with expiry
+            
             const hours = data?.hours || 8
             const until = new Date(Date.now() + hours * 60 * 60 * 1000)
             chat.mutedBy.push({ userId, until })
@@ -146,14 +146,14 @@ export async function PUT(req: Request) {
             chat.archivedBy = chat.archivedBy.filter((id: any) => id.toString() !== userId)
             break
         case "clear":
-            // Set clear timestamp for this user
+            
             if (!chat.clearedAt) {
                 chat.clearedAt = new Map()
             }
             chat.clearedAt.set(userId, new Date())
             break
         case "markAsRead":
-            // Mark all messages in this chat as read
+            
             await Message.updateMany(
                 {
                     chatId,
@@ -165,11 +165,11 @@ export async function PUT(req: Request) {
                     $addToSet: { readBy: { userId, readAt: new Date() } }
                 }
             )
-            // Reset unread count
+            
             chat.unreadCounts.set(userId, 0)
             break
         case "delete":
-            // Actually delete the chat and all its messages
+            
             await Message.deleteMany({ chatId })
             await Chat.findByIdAndDelete(chatId)
             return NextResponse.json({ success: true, deleted: true })

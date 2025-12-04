@@ -22,7 +22,7 @@ export default function IncomingCallModal({
     const oscillatorRef = useRef<OscillatorNode | null>(null)
 
     useEffect(() => {
-        // Create ringtone using Web Audio API
+        
         try {
             const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
             audioContextRef.current = audioContext
@@ -40,7 +40,7 @@ export default function IncomingCallModal({
             oscillator.start()
             oscillatorRef.current = oscillator
 
-            // Create pulsing effect
+            
             const interval = setInterval(() => {
                 if (gainNode && audioContext) {
                     const now = audioContext.currentTime
@@ -56,7 +56,7 @@ export default function IncomingCallModal({
                     try {
                         oscillatorRef.current.stop()
                     } catch (e) {
-                        // Already stopped
+                        
                     }
                 }
                 audioContext.close()
@@ -72,7 +72,7 @@ export default function IncomingCallModal({
                 oscillatorRef.current.stop()
                 audioContextRef.current.close()
             } catch (e) {
-                // Already stopped
+                
             }
         }
         onAccept()
@@ -84,7 +84,7 @@ export default function IncomingCallModal({
                 oscillatorRef.current.stop()
                 audioContextRef.current.close()
             } catch (e) {
-                // Already stopped
+                
             }
         }
         onReject()
@@ -93,7 +93,7 @@ export default function IncomingCallModal({
     return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in">
-                {/* Header with gradient */}
+                {}
                 <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-6 text-center">
                     <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg overflow-hidden bg-white">
                         {callerAvatar ? (
@@ -126,9 +126,9 @@ export default function IncomingCallModal({
                     </p>
                 </div>
 
-                {/* Action buttons */}
+                {}
                 <div className="p-6 flex gap-4 justify-center">
-                    {/* Reject button */}
+                    {}
                     <button
                         onClick={handleReject}
                         className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 active:scale-95 transition flex flex-col items-center justify-center gap-1 text-white shadow-lg"
@@ -137,7 +137,7 @@ export default function IncomingCallModal({
                         <span className="text-xs font-medium">Decline</span>
                     </button>
 
-                    {/* Accept button */}
+                    {}
                     <button
                         onClick={handleAccept}
                         className="w-20 h-20 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 transition flex flex-col items-center justify-center gap-1 text-white shadow-lg animate-pulse-slow"

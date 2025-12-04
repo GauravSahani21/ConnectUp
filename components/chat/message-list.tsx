@@ -19,7 +19,7 @@ export default function MessageList({ messages, isTyping, onReply }: MessageList
     endRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, isTyping])
 
-  // Group messages by date
+  
   const groupedMessages = messages.reduce(
     (acc, msg) => {
       const date = new Date(msg.timestamp).toLocaleDateString()

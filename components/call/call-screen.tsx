@@ -70,10 +70,10 @@ export default function CallScreen({
 
     return (
         <div className="fixed inset-0 z-50 bg-gradient-to-b from-green-600 to-green-800 dark:from-green-700 dark:to-green-900 flex flex-col items-center justify-between p-8">
-            {/* Video containers */}
+            {}
             {callType === "video" && (
                 <>
-                    {/* Remote video (main) */}
+                    {}
                     <div className="absolute inset-0">
                         {remoteStream ? (
                             <video
@@ -103,7 +103,7 @@ export default function CallScreen({
                         )}
                     </div>
 
-                    {/* Local video (small) */}
+                    {}
                     <div className="absolute top-4 right-4 w-32 h-40 rounded-lg overflow-hidden shadow-2xl z-10 bg-gray-900">
                         {localStream && !isVideoOff ? (
                             <video
@@ -126,7 +126,7 @@ export default function CallScreen({
                 </>
             )}
 
-            {/* Audio call UI */}
+            {}
             {callType === "audio" && (
                 <div className="flex-1 flex flex-col items-center justify-center relative z-10">
                     <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-lg flex items-center justify-center mb-6 shadow-2xl">
@@ -149,9 +149,9 @@ export default function CallScreen({
                 </div>
             )}
 
-            {/* Call controls */}
+            {}
             <div className={`flex gap-6 items-center justify-center ${callType === "video" ? "relative z-10 mb-8" : ""}`}>
-                {/* Mute button */}
+                {}
                 <button
                     onClick={() => setIsMuted(!isMuted)}
                     className={`w-16 h-16 rounded-full flex items-center justify-center transition ${isMuted
@@ -166,7 +166,7 @@ export default function CallScreen({
                     )}
                 </button>
 
-                {/* Video toggle (video calls only) */}
+                {}
                 {callType === "video" && (
                     <button
                         onClick={() => setIsVideoOff(!isVideoOff)}
@@ -183,7 +183,7 @@ export default function CallScreen({
                     </button>
                 )}
 
-                {/* End call button */}
+                {}
                 <button
                     onClick={() => onEndCall(callDuration)}
                     className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition shadow-2xl"
@@ -191,7 +191,7 @@ export default function CallScreen({
                     <PhoneOff className="text-white" size={24} />
                 </button>
 
-                {/* Speaker toggle (audio calls only) */}
+                {}
                 {callType === "audio" && (
                     <button
                         onClick={() => setIsSpeakerOn(!isSpeakerOn)}

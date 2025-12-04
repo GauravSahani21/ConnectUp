@@ -10,34 +10,34 @@ interface LoginFormProps {
   onToggle: () => void
 }
 
-export default function LoginForm({ onToggle }: LoginFormProps) { // Removed onLogin from props
+export default function LoginForm({ onToggle }: LoginFormProps) { 
   const [email, setEmail] = useState("demo@example.com")
   const [password, setPassword] = useState("password")
   const [showPassword, setShowPassword] = useState(false)
-  // const [loading, setLoading] = useState(false) // Replaced by isLoading
+  
 
   const { login } = useApp()
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("") // State to hold login error messages
+  const [error, setError] = useState("") 
 
-  // Renamed from handleSubmit to onSubmit to match the diff's intent,
-  // but adapted to use existing state variables instead of a form library's 'values'
+  
+  
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Login form submitted with:", { email, password: "***" })
     setIsLoading(true)
-    setError("") // Clear any previous errors
+    setError("") 
     try {
       console.log("Calling login function...")
-      // await new Promise((resolve) => setTimeout(resolve, 500)) // Removed artificial delay
-      await login(email, password) // Use the login function from useApp
+      
+      await login(email, password) 
       console.log("Login successful!")
-      // onLogin(email, password) // Removed as login is handled by useApp
+      
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Login failed"
       console.error("Login error:", errorMessage, error)
-      setError(errorMessage) // Set the error message
-      // You might want to show a toast here, e.g., toast.error("Login failed!")
+      setError(errorMessage) 
+      
     } finally {
       setIsLoading(false)
     }
@@ -53,7 +53,7 @@ export default function LoginForm({ onToggle }: LoginFormProps) { // Removed onL
         <p className="text-gray-600 dark:text-gray-400 mt-2">Connect with your friends instantly</p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4"> {/* Changed handleSubmit to onSubmit */}
+      <form onSubmit={onSubmit} className="space-y-4"> {}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email Address</label>
           <div className="relative">

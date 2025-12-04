@@ -14,13 +14,13 @@ export default function ChatArea() {
   const [replyTo, setReplyTo] = useState<any>(null)
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
 
-  // Get real-time chat data to check typing status
+  
   const activeChat = useMemo(() =>
     chats.find(c => c.id === selectedChat?.id) || selectedChat,
     [chats, selectedChat]
   )
 
-  // Listen for typing events via Socket.io
+  
   useEffect(() => {
     if (!socket || !selectedChat) return
 
@@ -49,7 +49,7 @@ export default function ChatArea() {
     }
   }, [socket, selectedChat, currentUser])
 
-  // Clear typing users when chat changes
+  
   useEffect(() => {
     setTypingUsers(new Set())
   }, [selectedChat?.id])

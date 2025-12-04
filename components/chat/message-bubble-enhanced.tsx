@@ -8,7 +8,7 @@ import LocationMessage from "./location-message"
 import CallMessage from "./call-message"
 
 interface MessageBubbleProps {
-    message: any // Extended message type with new fields
+    message: any 
     isOwn: boolean
     onReply?: (message: any) => void
 }
@@ -20,15 +20,15 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
     const [editText, setEditText] = useState(message.text)
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
 
-    // Swipe to reply logic
+    
     const [dragX, setDragX] = useState(0)
     const [isDragging, setIsDragging] = useState(false)
     const startXRef = useRef<number | null>(null)
     const threshold = 50
 
     const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
-        // Only allow swipe on touch devices or if explicitly enabled for desktop
-        // For desktop, we'll use a specific handle or just allow drag on the bubble
+        
+        
         const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
         startXRef.current = clientX
         setIsDragging(true)
@@ -40,7 +40,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
         const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX
         const diff = clientX - startXRef.current
 
-        // Only allow dragging to the right and cap at 100px
+        
         if (diff > 0 && diff < 100) {
             setDragX(diff)
         }
@@ -109,7 +109,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
         setIsEditing(false)
     }
 
-    // Get read receipt icon
+    
     const getReadReceiptIcon = () => {
         if (!isOwn) return null
 
@@ -151,7 +151,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
             onMouseMove={isDragging ? handleTouchMove : undefined}
             onMouseUp={handleTouchEnd}
         >
-            {/* Reply Icon Indicator - Visible when dragging */}
+            {}
             <div
                 className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center transition-opacity duration-200 z-0"
                 style={{
@@ -164,12 +164,12 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                 </div>
             </div>
 
-            {/* Draggable Content Wrapper */}
+            {}
             <div
                 className="flex flex-col max-w-xs relative transition-transform duration-200 ease-out z-10"
                 style={{ transform: `translateX(${dragX}px)` }}
             >
-                {/* Call messages get their own styling, not in bubble */}
+                {}
                 {message.type === "call" && message.callMetadata ? (
                     <CallMessage
                         callType={message.callMetadata.callType}
@@ -182,7 +182,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                     />
                 ) : (
                     <>
-                        {/* Reply reference */}
+                        {}
                         {message.replyTo && (
                             <div className={`text-xs px-3 py-1 mb-1 rounded-lg border-l-4 ${isOwn
                                 ? "bg-green-50 dark:bg-green-900/20 border-green-600"
@@ -197,14 +197,14 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                             </div>
                         )}
 
-                        {/* Message bubble */}
+                        {}
                         <div
                             className={`px-4 py-2 rounded-2xl ${isOwn
                                 ? "bg-green-100 dark:bg-green-900 text-gray-900 dark:text-white rounded-br-none"
                                 : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-none"
                                 }`}
                         >
-                            {/* Forwarded indicator */}
+                            {}
                             {message.forwardedFrom && (
                                 <p className="text-xs italic text-gray-500 dark:text-gray-400 mb-1">
                                     Forwarded from {message.forwardedFrom.name}
@@ -280,7 +280,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                             )}
                         </div>
 
-                        {/* Reactions */}
+                        {}
                         {message.reactions && message.reactions.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1">
                                 {Object.entries(
@@ -299,7 +299,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                             </div>
                         )}
 
-                        {/* Action buttons */}
+                        {}
                         {showActions && (
                             <div className={`absolute -top-8 ${isOwn ? "right-0" : "left-0"} flex gap-1 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-1 opacity-0 group-hover:opacity-100 transition`}>
                                 <button
@@ -347,7 +347,7 @@ export default function MessageBubble({ message, isOwn, onReply }: MessageBubble
                             </div>
                         )}
 
-                        {/* Emoji picker */}
+                        {}
                         {showEmojiPicker && (
                             <div className={`absolute top-full mt-2 ${isOwn ? "right-0" : "left-0"} bg-white dark:bg-gray-800 shadow-lg rounded-lg p-2 z-10 flex gap-1`}>
                                 {quickReactions.map(emoji => (

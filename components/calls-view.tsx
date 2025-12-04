@@ -10,7 +10,7 @@ export default function CallsView() {
     const { chats, messages } = useApp()
     const [searchQuery, setSearchQuery] = useState("")
 
-    // Collect all call messages from all chats
+    
     useEffect(() => {
         const allCallMessages: Array<Message & { chatName: string; chatAvatar?: string }> = []
 
@@ -27,7 +27,7 @@ export default function CallsView() {
             allCallMessages.push(...callMessages)
         })
 
-        // Sort by timestamp (most recent first)
+        
         allCallMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
         setCallHistory(allCallMessages)
@@ -85,11 +85,11 @@ export default function CallsView() {
 
     return (
         <div className="w-full md:w-96 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            {/* Header */}
+            {}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Calls</h1>
 
-                {/* Search */}
+                {}
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
@@ -102,7 +102,7 @@ export default function CallsView() {
                 </div>
             </div>
 
-            {/* Call List */}
+            {}
             <div className="flex-1 overflow-y-auto">
                 {filteredHistory.length === 0 ? (
                     <div className="p-8 text-center text-gray-500 dark:text-gray-400">
@@ -119,7 +119,7 @@ export default function CallsView() {
                                     : ""
                                 }`}
                         >
-                            {/* Avatar */}
+                            {}
                             <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                 {call.chatAvatar ? (
                                     <img src={call.chatAvatar} alt={call.chatName} className="w-full h-full rounded-full object-cover" />
@@ -130,7 +130,7 @@ export default function CallsView() {
                                 )}
                             </div>
 
-                            {/* Call Info */}
+                            {}
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-gray-900 dark:text-white truncate flex items-center gap-2">
                                     {call.chatName}
@@ -147,7 +147,7 @@ export default function CallsView() {
                                 </div>
                             </div>
 
-                            {/* Time */}
+                            {}
                             <div className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
                                 {formatTime(call.timestamp)}
                             </div>

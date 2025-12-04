@@ -28,7 +28,7 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
             async (position) => {
                 const { latitude, longitude } = position.coords
 
-                // Try to get address via reverse geocoding
+                
                 let address: string | undefined
                 try {
                     const response = await fetch(
@@ -43,7 +43,7 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
                     address = data.display_name
                 } catch (err) {
                     console.error("Failed to get address:", err)
-                    // Continue without address - not critical
+                    
                 }
 
                 setLocation({ latitude, longitude, address })
@@ -82,7 +82,7 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-                {/* Header */}
+                {}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Share Location</h2>
                     <button
@@ -93,7 +93,7 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
                     </button>
                 </div>
 
-                {/* Content */}
+                {}
                 <div className="p-6">
                     {!location && !loading && !error && (
                         <div className="text-center">
@@ -136,34 +136,34 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
 
                     {location && (
                         <div>
-                            {/* Static Map Preview */}
+                            {}
                             <div className="mb-4 rounded-lg overflow-hidden">
                                 <img
                                     src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ff0000(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},14,0/400x200@2x?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw`}
                                     alt="Location preview"
                                     className="w-full h-48 object-cover"
                                     onError={(e) => {
-                                        // Fallback to OpenStreetMap if Mapbox fails
+                                        
                                         e.currentTarget.src = `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`
                                     }}
                                 />
                             </div>
 
-                            {/* Address */}
+                            {}
                             {location.address && (
                                 <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
                                     <p className="text-sm text-gray-700 dark:text-gray-300">{location.address}</p>
                                 </div>
                             )}
 
-                            {/* Coordinates */}
+                            {}
                             <div className="mb-4 text-center">
                                 <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                                 </p>
                             </div>
 
-                            {/* Actions */}
+                            {}
                             <div className="flex gap-2">
                                 <button
                                     onClick={onCancel}

@@ -99,14 +99,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDarkMode, setIsDarkModeState] = useState(false)
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
 
-  // Fetch chats using SWR for real-time updates
+  
   const { data: chatsData, mutate: mutateChats } = useSWR(
     currentUser ? `/api/chats?userId=${currentUser.id}` : null,
     fetcher,
     { refreshInterval: 3000 }
   )
 
-  // Fetch messages for selected chat
+  
   const { data: messagesData, mutate: mutateMessages } = useSWR(
     selectedChat && currentUser ? `/api/messages?chatId=${selectedChat.id}&userId=${currentUser.id}` : null,
     fetcher,
@@ -120,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Check for stored user
+    
     const storedUser = localStorage.getItem("connectup-user")
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser))
@@ -203,14 +203,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(messageData),
       })
-      // Assuming the response needs to be handled or checked for success
+      
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to send message");
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-      // Optionally re-throw or handle the error more gracefully
+      
     }
     mutateMessages()
     mutateChats()
@@ -251,7 +251,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return res.json()
   }
 
-  // Placeholders for features not fully backend-integrated yet
+  
   const updateUserStatus = () => { }
   const searchChats = (query: string) => chats.filter(c => c.participant.name.toLowerCase().includes(query.toLowerCase()))
 
@@ -359,7 +359,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mutateChats()
   }
 
-  // Fetch friend requests
+  
   const { data: friendRequestsData, mutate: mutateFriendRequests } = useSWR(
     currentUser ? `/api/friend-requests?userId=${currentUser.id}` : null,
     fetcher,
@@ -401,7 +401,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     chats,
     selectedChat,
     messages,
-    users: [], // Users are now fetched via search
+    users: [], 
     friendRequests,
     setCurrentUser,
     setIsDarkMode,

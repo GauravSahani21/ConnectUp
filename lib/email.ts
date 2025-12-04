@@ -6,21 +6,21 @@ interface EmailOptions {
     html: string
 }
 
-// Create transporter
+
 const createTransporter = () => {
-    // Using Gmail SMTP (you can change this to any SMTP provider)
+    
     return nodemailer.createTransport({
         service: "gmail",
         auth: {
-            user: process.env.EMAIL_USER, // Your Gmail address
-            pass: process.env.EMAIL_PASSWORD, // Your Gmail App Password
+            user: process.env.EMAIL_USER, 
+            pass: process.env.EMAIL_PASSWORD, 
         },
     })
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
     try {
-        // Skip sending email if credentials are not configured
+        
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
             console.log("Email credentials not configured. Skipping email send.")
             console.log("To:", to)
@@ -46,7 +46,7 @@ export async function sendEmail({ to, subject, html }: EmailOptions) {
     }
 }
 
-// Email template for friend request notification
+
 export function generateFriendRequestEmail(sender: {
     name: string
     email: string
@@ -209,7 +209,7 @@ export function generateFriendRequestEmail(sender: {
     `
 }
 
-// Email template for friend request acceptance notification
+
 export function generateRequestAcceptedEmail(accepter: {
     name: string
     email: string

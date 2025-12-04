@@ -6,7 +6,7 @@ const FriendRequestSchema = new mongoose.Schema({
     status: { type: String, enum: ["pending", "accepted", "rejected"], default: "pending" },
 }, { timestamps: true })
 
-// Index to prevent duplicate pending requests
+
 FriendRequestSchema.index({ senderId: 1, receiverId: 1, status: 1 })
 
 export default mongoose.models.FriendRequest || mongoose.model("FriendRequest", FriendRequestSchema)

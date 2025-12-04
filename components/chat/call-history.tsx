@@ -10,7 +10,7 @@ export default function CallHistory() {
     const [callHistory, setCallHistory] = useState<Array<Message & { chatName: string }>>([])
     const { chats, messages } = useApp()
 
-    // Collect all call messages from all chats
+    
     useEffect(() => {
         const allCallMessages: Array<Message & { chatName: string }> = []
 
@@ -26,14 +26,14 @@ export default function CallHistory() {
             allCallMessages.push(...callMessages)
         })
 
-        // Sort by timestamp (most recent first)
+        
         allCallMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
-        // Show only last 50 calls
+        
         setCallHistory(allCallMessages.slice(0, 50))
     }, [chats, messages])
 
-    // Count unread (missed) calls
+    
     const missedCount = callHistory.filter(
         n => n.callMetadata?.status === "missed" && !n.callMetadata.isOutgoing
     ).length
@@ -84,7 +84,7 @@ export default function CallHistory() {
 
     return (
         <div className="relative">
-            {/* Phone Icon Button */}
+            {}
             <button
                 onClick={() => setShowPanel(!showPanel)}
                 className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
@@ -98,18 +98,18 @@ export default function CallHistory() {
                 )}
             </button>
 
-            {/* Call History Panel */}
+            {}
             {showPanel && (
                 <>
-                    {/* Backdrop */}
+                    {}
                     <div
                         className="fixed inset-0 z-40"
                         onClick={() => setShowPanel(false)}
                     />
 
-                    {/* Panel */}
+                    {}
                     <div className="absolute right-0 top-12 w-80 max-h-96 bg-white dark:bg-slate-800 rounded-lg shadow-2xl z-50 overflow-hidden">
-                        {/* Header */}
+                        {}
                         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
                             <h3 className="font-semibold text-gray-900 dark:text-white">Call History</h3>
                             <button
@@ -120,7 +120,7 @@ export default function CallHistory() {
                             </button>
                         </div>
 
-                        {/* History List */}
+                        {}
                         <div className="overflow-y-auto max-h-80">
                             {callHistory.length === 0 ? (
                                 <div className="p-8 text-center text-gray-500 dark:text-gray-400">

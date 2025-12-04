@@ -80,13 +80,13 @@ export default function CallMessage({
             onClick={isMissedIncoming ? handleCallBack : undefined}
         >
             <div className="flex items-center gap-3">
-                {/* Call Icon */}
+                {}
                 <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${isMissedIncoming ? 'bg-red-500/20' : 'bg-green-500/20'
                     }`}>
                     {getCallIcon()}
                 </div>
 
-                {/* Call Info */}
+                {}
                 <div className="flex-1 min-w-0">
                     <p className={`font-semibold ${isMissedIncoming ? 'text-white' : 'text-gray-900 dark:text-white'
                         }`}>
@@ -98,7 +98,7 @@ export default function CallMessage({
                     </p>
                 </div>
 
-                {/* Time / Chevron */}
+                {}
                 <div className="flex-shrink-0">
                     {isMissedIncoming ? (
                         <ChevronDown size={20} className="text-gray-400" />

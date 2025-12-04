@@ -24,41 +24,43 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.NODE_ENV === 'production' ? false : ['http://localhost:3000'],
+      origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.NEXT_PUBLIC_APP_URL, 'https://connectup-chat.onrender.com'] 
+        : ['http://localhost:3000'],
       methods: ['GET', 'POST']
     }
   })
 
-  // Store active typing users per chat
-  const typingUsers = new Map() // chatId -> Set of userIds
   
-  // Store user socket mappings for direct calls (must be outside connection handler)
-  const userSockets = new Map() // userId -> socketId
+  const typingUsers = new Map() 
+  
+  
+  const userSockets = new Map() 
 
   io.on('connection', (socket) => {
     console.log('Client connected:', socket.id)
 
-    // Join user to their chat rooms
+    
     socket.on('join-chat', (chatId) => {
       socket.join(`chat:${chatId}`)
       console.log(`Socket ${socket.id} joined chat:${chatId}`)
     })
 
-    // Leave chat room
+    
     socket.on('leave-chat', (chatId) => {
       socket.leave(`chat:${chatId}`)
       console.log(`Socket ${socket.id} left chat:${chatId}`)
     })
 
-    // Handle typing event
+    
     socket.on('typing', ({ chatId, userId, userName }) => {
-      // Add user to typing set for this chat
+      
       if (!typingUsers.has(chatId)) {
         typingUsers.set(chatId, new Set())
       }
       typingUsers.get(chatId).add(userId)
 
-      // Broadcast to other users in the chat
+      
       socket.to(`chat:${chatId}`).emit('userTyping', { 
         chatId, 
         userId, 
@@ -67,9 +69,9 @@ app.prepare().then(() => {
       console.log(`User ${userName} (${userId}) is typing in chat ${chatId}`)
     })
 
-    // Handle stop typing event
+    
     socket.on('stopTyping', ({ chatId, userId, userName }) => {
-      // Remove user from typing set
+      
       if (typingUsers.has(chatId)) {
         typingUsers.get(chatId).delete(userId)
         if (typingUsers.get(chatId).size === 0) {
@@ -77,7 +79,7 @@ app.prepare().then(() => {
         }
       }
 
-      // Broadcast to other users in the chat
+      
       socket.to(`chat:${chatId}`).emit('userStoppedTyping', { 
         chatId, 
         userId 
@@ -85,15 +87,15 @@ app.prepare().then(() => {
       console.log(`User ${userName} (${userId}) stopped typing in chat ${chatId}`)
     })
 
-    // ========== CALL EVENTS ==========
     
-    // Register user
+    
+    
     socket.on('register-user', (userId) => {
       userSockets.set(userId, socket.id)
       console.log(`User ${userId} registered with socket ${socket.id}`)
     })
 
-    // Initiate call
+    
     socket.on('call:initiate', ({ callId, callerId, receiverId, callerName, callType }) => {
       const receiverSocket = userSockets.get(receiverId)
       if (receiverSocket) {
@@ -107,7 +109,7 @@ app.prepare().then(() => {
       }
     })
 
-    // Answer call
+    
     socket.on('call:answer', ({ callId, callerId }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
@@ -116,7 +118,7 @@ app.prepare().then(() => {
       }
     })
 
-    // Reject call
+    
     socket.on('call:reject', ({ callId, callerId }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
@@ -125,7 +127,7 @@ app.prepare().then(() => {
       }
     })
 
-    // End call
+    
     socket.on('call:end', ({ callId, userId, otherUserId }) => {
       const otherSocket = userSockets.get(otherUserId)
       if (otherSocket) {
@@ -134,7 +136,7 @@ app.prepare().then(() => {
       }
     })
 
-    // WebRTC signaling - offer
+    
     socket.on('call:offer', ({ callId, receiverId, offer }) => {
       const receiverSocket = userSockets.get(receiverId)
       if (receiverSocket) {
@@ -143,7 +145,7 @@ app.prepare().then(() => {
       }
     })
 
-    // WebRTC signaling - answer
+    
     socket.on('call:answer-sdp', ({ callId, callerId, answer }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
@@ -152,7 +154,7 @@ app.prepare().then(() => {
       }
     })
 
-    // WebRTC signaling - ICE candidate
+    
     socket.on('call:ice-candidate', ({ callId, userId, otherUserId, candidate }) => {
       const otherSocket = userSockets.get(otherUserId)
       if (otherSocket) {
@@ -161,11 +163,11 @@ app.prepare().then(() => {
       }
     })
 
-    // Handle disconnection
+    
     socket.on('disconnect', () => {
       console.log('Client disconnected:', socket.id)
-      // Clean up typing status for disconnected user
-      // (In a production app, you'd want to track socket.id to userId mapping)
+      
+      
     })
   })
 

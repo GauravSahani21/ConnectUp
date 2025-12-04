@@ -3,7 +3,7 @@ import dbConnect from "@/lib/db"
 import Message from "@/models/Message"
 import Chat from "@/models/Chat"
 
-// Update message status (delivered/read)
+
 export async function PUT(req: Request) {
     await dbConnect()
     const { messageIds, status, userId } = await req.json()
@@ -14,7 +14,7 @@ export async function PUT(req: Request) {
 
     try {
         if (status === "delivered") {
-            // Mark messages as delivered
+            
             await Message.updateMany(
                 { _id: { $in: messageIds } },
                 {
@@ -23,7 +23,7 @@ export async function PUT(req: Request) {
                 }
             )
         } else if (status === "read") {
-            // Mark messages as read
+            
             await Message.updateMany(
                 { _id: { $in: messageIds } },
                 {
@@ -34,7 +34,7 @@ export async function PUT(req: Request) {
                 }
             )
 
-            // Update chat's last message read status if applicable
+            
             const messages = await Message.find({ _id: { $in: messageIds } })
             for (const message of messages) {
                 await Chat.updateOne(
@@ -54,7 +54,7 @@ export async function PUT(req: Request) {
     }
 }
 
-// Add reaction to message
+
 export async function POST(req: Request) {
     await dbConnect()
     const { messageId, userId, emoji } = await req.json()
@@ -69,12 +69,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Message not found" }, { status: 404 })
         }
 
-        // Remove existing reaction from this user
+        
         message.reactions = message.reactions.filter(
             (r: any) => r.userId.toString() !== userId
         )
 
-        // Add new reaction
+        
         message.reactions.push({ userId, emoji, createdAt: new Date() })
         await message.save()
 

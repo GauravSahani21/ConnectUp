@@ -39,14 +39,14 @@ export function CallProvider({ children }: { children: ReactNode }) {
     } | null>(null)
     const callTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-    // Register user when connected
+    
     useEffect(() => {
         if (socket && currentUser) {
             socket.emit('register-user', currentUser.id)
         }
     }, [socket, currentUser])
 
-    // Listen for incoming call
+    
     useEffect(() => {
         if (!socket) return
 
@@ -58,7 +58,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         }) => {
             setIncomingCall(data)
 
-            // Auto-reject after 30 seconds if not answered
+            
             callTimeoutRef.current = setTimeout(() => {
                 if (socket) {
                     socket.emit('call:reject', {
@@ -66,19 +66,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
                         callerId: data.callerId
                     })
 
-                    // Save missed call message
+                    
                     saveCallMessage(data.callerId, data.callType, 'missed', 0, false)
 
                     setIncomingCall(null)
 
-                    // Show missed call notification
+                    
                     const { toast } = require('sonner')
                     toast.error(`Missed call from ${data.callerName}`, {
                         description: data.callType === 'video' ? 'Video call' : 'Voice call',
                         duration: 5000
                     })
                 }
-            }, 30000) // 30 seconds
+            }, 30000) 
         }
 
         const handleCallAnswered = () => {
@@ -95,7 +95,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             }
             endCall()
 
-            // Show notification that call was declined
+            
             const { toast } = require('sonner')
             toast.info('Call declined')
         }
@@ -163,7 +163,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setOtherUser({ id: userId, name: userName, avatar: userAvatar })
         setIsInCall(true)
 
-        // Initialize WebRTC
+        
         const peer = new WebRTCPeer()
         setWebrtcPeer(peer)
 
@@ -182,7 +182,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             )
             setLocalStream(stream)
 
-            // Send call initiation
+            
             socket.emit('call:initiate', {
                 callId,
                 callerId: currentUser.id,
@@ -191,7 +191,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
                 callType: type
             })
 
-            // Create and send offer
+            
             const offer = await peer.createOffer()
             socket.emit('call:offer', {
                 callId,
@@ -207,7 +207,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     const answerCall = useCallback(async () => {
         if (!socket || !currentUser || !incomingCall) return
 
-        // Clear timeout
+        
         if (callTimeoutRef.current) {
             clearTimeout(callTimeoutRef.current)
         }
@@ -219,7 +219,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         setIsInCall(true)
         setIncomingCall(null)
 
-        // Initialize WebRTC
+        
         const peer = new WebRTCPeer()
         setWebrtcPeer(peer)
 
@@ -258,8 +258,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
         try {
             if (!currentUser) return
 
-            // Find chat ID between current user and other user
-            // We can use the API to find or create the chat
+            
+            
             const chatRes = await fetch(`/api/chats/find?userId=${otherUserId}&currentUserId=${currentUser.id}`)
             const chatData = await chatRes.json()
 
@@ -294,19 +294,19 @@ export function CallProvider({ children }: { children: ReactNode }) {
                 otherUserId: otherUser.id
             })
 
-            // Save completed call message if connected
+            
             if (duration > 0) {
                 saveCallMessage(otherUser.id, callType || 'audio', 'completed', duration, isOutgoing)
             } else {
-                // If duration is 0, it was cancelled before connecting
+                
                 saveCallMessage(otherUser.id, callType || 'audio', 'cancelled', 0, isOutgoing)
             }
         }
 
-        // Clean up WebRTC
+        
         webrtcPeer?.close()
 
-        // Reset state
+        
         setIsInCall(false)
         setCallType(null)
         setIsOutgoing(false)
@@ -321,7 +321,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     const rejectCall = useCallback(() => {
         if (!socket || !incomingCall) return
 
-        // Clear timeout
+        
         if (callTimeoutRef.current) {
             clearTimeout(callTimeoutRef.current)
         }
@@ -331,7 +331,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             callerId: incomingCall.callerId
         })
 
-        // Save rejected call message
+        
         saveCallMessage(incomingCall.callerId, incomingCall.callType, 'rejected', 0, false)
 
         setIncomingCall(null)
@@ -353,13 +353,13 @@ export function CallProvider({ children }: { children: ReactNode }) {
     return (
         <CallContext.Provider value={value}>
             {children}
-            {/* Show incoming call modal globally */}
+            {}
             {incomingCall && !isInCall && (
                 <div className="fixed inset-0 z-[999]">
-                    {/* Dynamically import to avoid SSR issues */}
+                    {}
                     {typeof window !== 'undefined' && (
                         <>
-                            {/* Lazy load components */}
+                            {}
                             <IncomingCallModalWrapper
                                 callerName={incomingCall.callerName}
                                 callType={incomingCall.callType}
@@ -374,7 +374,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
     )
 }
 
-// Wrapper to handle dynamic import
+
 function IncomingCallModalWrapper(props: any) {
     const IncomingCallModal = require('@/components/call/incoming-call-modal').default
     return <IncomingCallModal {...props} />

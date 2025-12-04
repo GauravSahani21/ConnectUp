@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
         await dbConnect()
 
-        // Find chat between these two users
+        
         const chat = await Chat.findOne({
             participants: { $all: [currentUserId, userId] }
         })
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         if (chat) {
             return NextResponse.json({ chatId: chat._id.toString() })
         } else {
-            // Create new chat if doesn't exist
+            
             const newChat = await Chat.create({
                 participants: [currentUserId, userId],
                 messages: []
