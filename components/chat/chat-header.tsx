@@ -29,13 +29,13 @@ export default function ChatHeader() {
     isOpen: false,
   })
 
-  
+
   const activeChat = useMemo(() =>
     chats.find(c => c.id === selectedChat?.id) || selectedChat,
     [chats, selectedChat]
   )
 
-  
+
   useEffect(() => {
     if (!socket || !selectedChat) return
 
@@ -64,7 +64,7 @@ export default function ChatHeader() {
     }
   }, [socket, selectedChat, currentUser])
 
-  
+
   useEffect(() => {
     setTypingUsers(new Set())
   }, [selectedChat?.id])
@@ -89,7 +89,7 @@ export default function ChatHeader() {
         await unmuteChat(activeChat.id)
         toast.success("Notifications unmuted")
       } else {
-        await muteChat(activeChat.id, 8) 
+        await muteChat(activeChat.id, 8)
         toast.success("Muted for 8 hours")
       }
     } catch (error) {
@@ -118,7 +118,7 @@ export default function ChatHeader() {
     <>
       <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3 flex-1">
-          {}
+          { }
           <button
             onClick={() => setSelectedChat(null)}
             className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition -ml-2"
@@ -134,6 +134,9 @@ export default function ChatHeader() {
                 src={participant.avatar || "/placeholder.svg"}
                 alt={participant.name}
                 className="w-12 h-12 rounded-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/placeholder.svg"
+                }}
               />
               <div
                 className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 ${isOnline ? "bg-green-500" : "bg-gray-400"
@@ -233,7 +236,7 @@ export default function ChatHeader() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {}
+      { }
       {showProfile && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowProfile(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -251,6 +254,9 @@ export default function ChatHeader() {
                   src={participant.avatar || "/placeholder.svg"}
                   alt={participant.name}
                   className="w-32 h-32 rounded-full border-4 border-white dark:border-slate-800 object-cover bg-white"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg"
+                  }}
                 />
               </div>
               <div className="text-center mb-6">

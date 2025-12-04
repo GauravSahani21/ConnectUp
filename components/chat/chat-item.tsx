@@ -35,6 +35,9 @@ export default function ChatItem({ chat }: ChatItemProps) {
           src={chat.participant.avatar || "/placeholder.svg"}
           alt={chat.participant.name}
           className="w-12 h-12 rounded-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = "/placeholder.svg"
+          }}
         />
         <div
           className={`absolute bottom-0 right-0 w-3 h-3 ${statusColor} rounded-full border-2 border-white dark:border-slate-800`}

@@ -40,7 +40,7 @@ export default function ProfileSettings({ onBack, isSettings }: ProfileSettingsP
 
   return (
     <div className="flex flex-1 flex-col bg-white dark:bg-slate-800">
-      {}
+      { }
       <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 flex items-center gap-4">
         <button onClick={onBack} className="p-2 hover:bg-white/20 rounded-full transition">
           <ArrowLeft size={24} />
@@ -52,13 +52,16 @@ export default function ProfileSettings({ onBack, isSettings }: ProfileSettingsP
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
-        {}
+        { }
         <div className="flex flex-col items-center mb-8">
           <div className="relative group cursor-pointer" onClick={() => document.getElementById("avatar-upload")?.click()}>
             <img
               src={currentUser?.avatar || "/placeholder.svg"}
               alt={currentUser?.name}
               className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-slate-700 shadow-lg"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/placeholder.svg"
+              }}
             />
             <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
               <Camera size={24} className="text-white" />
