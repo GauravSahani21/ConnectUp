@@ -22,7 +22,7 @@ function NotificationBadge({ count }: { count: number }) {
 }
 
 export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNavProps) {
-    const { friendRequests, chats, messages } = useApp()
+    const { friendRequests, chats, messages, selectedChat } = useApp()
 
 
     const friendRequestCount = useMemo(() => {
@@ -89,7 +89,7 @@ export default function LeftNav({ activeView, onViewChange, onNewChat }: LeftNav
             </div>
 
             { }
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 z-50">
+            <div className={`md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 z-50 ${selectedChat ? 'hidden' : ''}`}>
                 <div className="flex items-center justify-around px-2 py-2 relative">
                     { }
                     <div className="flex gap-1 flex-1 justify-around">
