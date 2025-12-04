@@ -53,7 +53,7 @@ export default function MainApp() {
       />
 
       {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
+      <div className={`flex flex-1 overflow-hidden ${selectedChat ? 'pb-0' : 'pb-16'} md:pb-0`}>
         {/* Sidebar Area */}
         <div className={`${(selectedChat && view === "chats") || view === "settings" ? 'hidden md:flex' : 'flex'} w-full md:w-auto h-full`}>
           {view === "chats" && (
