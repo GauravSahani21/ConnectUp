@@ -1,7 +1,6 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { AppProvider } from "@/context/app-context"
 import { SocketProvider } from "@/context/socket-context"
@@ -47,7 +46,6 @@ export default function RootLayout({
             </CallProvider>
           </SocketProvider>
         </AppProvider>
-        <Analytics />
       </body>
     </html>
   )
