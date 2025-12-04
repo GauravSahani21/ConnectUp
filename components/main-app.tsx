@@ -22,13 +22,13 @@ export default function MainApp() {
 
   const handleNewChat = () => {
     setShowNewChatModal(true)
-    
+
     if (view !== "chats") {
       setView("chats")
     }
   }
 
-  
+
   if (isInCall && callType && otherUser) {
     return (
       <CallScreen
@@ -45,17 +45,17 @@ export default function MainApp() {
 
   return (
     <div className="flex h-screen w-full bg-gray-100 dark:bg-slate-900">
-      {}
+      { }
       <LeftNav
         activeView={view}
         onViewChange={setView}
         onNewChat={handleNewChat}
       />
 
-      {}
+      {/* Main Content */}
       <div className="flex flex-1 overflow-hidden pb-16 md:pb-0">
-        {}
-        <div className={`${(selectedChat && view === "chats") || view === "settings" ? 'hidden md:flex' : 'flex'} w-full md:w-auto`}>
+        {/* Sidebar Area */}
+        <div className={`${(selectedChat && view === "chats") || view === "settings" ? 'hidden md:flex' : 'flex'} w-full md:w-auto h-full`}>
           {view === "chats" && (
             <ChatSidebar
               view="chat"
@@ -66,15 +66,15 @@ export default function MainApp() {
           {view === "friends" && <FriendRequestsView />}
         </div>
 
-        {}
-        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1`}>
+        {/* Chat/Content Area */}
+        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1 h-full overflow-hidden`}>
           {view === "chats" && <ChatArea />}
           {view === "settings" && <ProfileSettings onBack={() => setView("chats")} isSettings />}
           {view === "calls" && selectedChat && <ChatArea />}
         </div>
       </div>
 
-      {}
+      { }
       {showNewChatModal && <NewChatModal onClose={() => setShowNewChatModal(false)} />}
     </div>
   )
