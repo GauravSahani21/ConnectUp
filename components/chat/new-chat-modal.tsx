@@ -29,8 +29,8 @@ export default function NewChatModal({ onClose }: NewChatModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
-      <div className="bg-white dark:bg-slate-800 w-full md:w-96 rounded-t-2xl md:rounded-2xl max-h-96 flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-800 w-full md:w-96 rounded-2xl max-h-[80vh] flex flex-col shadow-xl">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">New Chat</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition">
