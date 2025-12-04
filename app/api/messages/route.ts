@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
     if (!chatId) return NextResponse.json({ error: "ChatId required" }, { status: 400 })
 
-    // Get chat to check clearedAt timestamp
+    
     const chat = await Chat.findById(chatId)
     const clearedAt = chat?.clearedAt?.get(userId)
 
@@ -20,12 +20,12 @@ export async function GET(req: Request) {
         filter.deletedFor = { $ne: userId }
     }
 
-    // If user has cleared this chat, only show messages after that timestamp
+    
     if (clearedAt) {
         filter.createdAt = { $gt: clearedAt }
     }
 
-    // Fetch messages and populate reply references
+    
     const messages = await Message.find(filter)
         .populate({ path: 'replyTo', select: 'text senderId createdAt', strictPopulate: false })
         .populate({ path: 'forwardedFrom', select: 'name avatar', strictPopulate: false })
@@ -69,11 +69,11 @@ export async function POST(req: Request) {
         status: "sent"
     })
 
-    // Get chat participants to calculate unread counts
+    
     const chat = await Chat.findById(chatId)
     const receiverId = chat.participants.find((p: any) => p.toString() !== senderId)
 
-    // Update Chat's last message and increment unread count for receiver
+    
     await Chat.findByIdAndUpdate(chatId, {
         lastMessage: {
             text: getLastMessageText(type, text),
@@ -120,15 +120,15 @@ export async function PUT(req: Request) {
             break
         case "delete":
             if (data.forEveryone && message.senderId.toString() === userId) {
-                // Delete for everyone (only if sender and within time limit)
+                
                 const messageAge = Date.now() - new Date(message.createdAt).getTime()
-                if (messageAge < 3600000) { // 1 hour
+                if (messageAge < 3600000) { 
                     message.deletedForEveryone = true
                 } else {
                     return NextResponse.json({ error: "Can only delete for everyone within 1 hour" }, { status: 400 })
                 }
             } else {
-                // Delete for me
+                
                 if (!message.deletedFor.includes(userId)) {
                     message.deletedFor.push(userId)
                 }

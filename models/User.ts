@@ -10,18 +10,18 @@ const UserSchema = new mongoose.Schema({
     status: { type: String, enum: ["online", "offline", "typing"], default: "offline" },
     lastSeen: { type: Date, default: Date.now },
 
-    // Privacy settings
+    
     privacySettings: {
         lastSeen: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" },
         profilePhoto: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" },
         about: { type: String, enum: ["everyone", "contacts", "nobody"], default: "everyone" }
     },
 
-    // Blocked users
+    
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 })
 
-// Index for faster searches
+
 UserSchema.index({ email: 1 })
 UserSchema.index({ name: "text" })
 

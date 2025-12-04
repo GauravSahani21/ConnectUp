@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import Chat from "@/models/Chat"
 
-// Set typing status
+
 export async function POST(req: Request) {
     await dbConnect()
     const { chatId, userId, isTyping } = await req.json()
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
         }
 
         if (isTyping) {
-            // Add user to typing list if not already there
+            
             const alreadyTyping = chat.typingUsers.find(
                 (t: any) => t.userId.toString() === userId
             )
@@ -26,11 +26,11 @@ export async function POST(req: Request) {
             if (!alreadyTyping) {
                 chat.typingUsers.push({ userId, timestamp: new Date() })
             } else {
-                // Update timestamp
+                
                 alreadyTyping.timestamp = new Date()
             }
         } else {
-            // Remove user from typing list
+            
             chat.typingUsers = chat.typingUsers.filter(
                 (t: any) => t.userId.toString() !== userId
             )
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     }
 }
 
-// Get typing status for a chat
+
 export async function GET(req: Request) {
     await dbConnect()
     const { searchParams } = new URL(req.url)
@@ -61,7 +61,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ error: "Chat not found" }, { status: 404 })
         }
 
-        // Remove stale typing indicators (older than 5 seconds)
+        
         const fiveSecondsAgo = new Date(Date.now() - 5000)
         chat.typingUsers = chat.typingUsers.filter(
             (t: any) => new Date(t.timestamp) > fiveSecondsAgo

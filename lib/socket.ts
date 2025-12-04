@@ -4,9 +4,10 @@ let socket: Socket | null = null
 
 export const getSocket = (): Socket => {
     if (!socket) {
-        socket = io('http://localhost:3000', {
-            autoConnect: true,
-            reconnection: true,
+        const url = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000')
+        socket = io(url, {
+            path: '/socket.io',
+            addTrailingSlash: false,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
             reconnectionAttempts: 5

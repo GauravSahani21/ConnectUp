@@ -36,13 +36,13 @@ async function seed() {
         await mongoose.connect(MONGODB_URI)
         console.log("✅ Connected to MongoDB")
 
-        // Clear existing data
+        
         await User.deleteMany({})
         await Chat.deleteMany({})
         await Message.deleteMany({})
         console.log("🗑️  Cleared existing data")
 
-        // Create demo user
+        
         const demoPassword = await bcrypt.hash("password", 10)
         const demoUser = await User.create({
             name: "Demo User",
@@ -54,7 +54,7 @@ async function seed() {
         })
         console.log("👤 Created demo user:", demoUser.email)
 
-        // Create additional users
+        
         const users = [
             {
                 name: "Alice Johnson",
@@ -89,7 +89,7 @@ async function seed() {
         const createdUsers = await User.insertMany(users)
         console.log(`👥 Created ${createdUsers.length} additional users`)
 
-        // Create AI Assistant user
+        
         const aiAssistant = await User.create({
             name: "AI Assistant",
             email: "ai@assistant.com",
@@ -100,21 +100,21 @@ async function seed() {
         })
         console.log("🤖 Created AI Assistant user with ID:", aiAssistant._id.toString())
 
-        // Create AI chat for demo user
+        
         const aiChat = await Chat.create({
             participants: [demoUser._id, aiAssistant._id],
         })
 
-        // Add welcome message from AI
+        
         await Message.create({
             chatId: aiChat._id,
             senderId: aiAssistant._id,
             text: "👋 Hello! I'm your AI Assistant. I'm here to help answer questions, have conversations, and assist you with various topics. Feel free to ask me anything!",
-            timestamp: new Date(Date.now() - 86400000), // 1 day ago
+            timestamp: new Date(Date.now() - 86400000), 
         })
         console.log("💬 Created AI Assistant chat with welcome message")
 
-        // Create chats between demo user and others
+        
         for (let i = 0; i < createdUsers.length; i++) {
             const otherUser = createdUsers[i]
             await Chat.create({

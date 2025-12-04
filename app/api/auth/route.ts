@@ -10,7 +10,7 @@ export async function POST(req: Request) {
         const { action, email, password, name } = body
         console.log("Auth Request:", { action, email, passwordLength: password?.length, body })
 
-        // Validate required fields
+        
         if (!action) {
             return NextResponse.json({ error: "Action is required" }, { status: 400 })
         }
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
                 name,
                 email,
                 password: hashedPassword,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`, // Generate random avatar
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`, 
             })
 
             return NextResponse.json({

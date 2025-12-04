@@ -97,7 +97,7 @@ export default function AudioPlayer({ audioUrl, duration, isOwn = false }: Audio
 
     const progress = audioDuration > 0 ? (currentTime / audioDuration) * 100 : 0
 
-    // Generate simplified waveform visual (simulated)
+    
     const waveformBars = Array.from({ length: 40 }, (_, i) => {
         const height = Math.random() * 100
         const isPassed = (i / 40) * 100 <= progress
@@ -121,7 +121,7 @@ export default function AudioPlayer({ audioUrl, duration, isOwn = false }: Audio
         <div className="flex items-center gap-2 min-w-[280px] py-1">
             <audio ref={audioRef} src={audioUrl} preload="metadata" />
 
-            {/* Play/Pause Button */}
+            {}
             <button
                 onClick={togglePlay}
                 disabled={isLoading}
@@ -140,9 +140,9 @@ export default function AudioPlayer({ audioUrl, duration, isOwn = false }: Audio
                 )}
             </button>
 
-            {/* Waveform & Progress */}
+            {}
             <div className="flex-1 flex flex-col gap-1">
-                {/* Waveform visualization */}
+                {}
                 <div
                     ref={progressRef}
                     onClick={handleProgressClick}
@@ -151,13 +151,13 @@ export default function AudioPlayer({ audioUrl, duration, isOwn = false }: Audio
                     {waveformBars}
                 </div>
 
-                {/* Time display */}
+                {}
                 <div className="flex items-center justify-between text-xs">
                     <span className={isOwn ? "text-white/90" : "text-gray-600 dark:text-gray-400"}>
                         {formatTime(currentTime)} / {formatTime(audioDuration)}
                     </span>
 
-                    {/* Playback speed */}
+                    {}
                     <button
                         onClick={toggleSpeed}
                         className={`px-2 py-0.5 rounded text-xs font-medium transition ${isOwn
@@ -170,7 +170,7 @@ export default function AudioPlayer({ audioUrl, duration, isOwn = false }: Audio
                 </div>
             </div>
 
-            {/* Download button */}
+            {}
             <a
                 href={audioUrl}
                 download

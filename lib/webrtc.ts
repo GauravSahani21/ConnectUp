@@ -1,4 +1,4 @@
-// WebRTC utility functions for managing peer connections
+
 
 export interface CallConfig {
     iceServers: RTCIceServer[]
@@ -31,7 +31,7 @@ export class WebRTCPeer {
         this.onRemoteStream = onRemoteStream
         this.onIceCandidate = onIceCandidate
 
-        // Get user media
+        
         try {
             this.localStream = await navigator.mediaDevices.getUserMedia({
                 audio: true,
@@ -46,17 +46,17 @@ export class WebRTCPeer {
             throw new Error('Could not access camera/microphone')
         }
 
-        // Create peer connection
+        
         this.peerConnection = new RTCPeerConnection(this.config)
 
-        // Add local stream tracks to peer connection
+        
         this.localStream.getTracks().forEach(track => {
             if (this.localStream && this.peerConnection) {
                 this.peerConnection.addTrack(track, this.localStream)
             }
         })
 
-        // Handle remote stream
+        
         this.peerConnection.ontrack = (event) => {
             if (!this.remoteStream) {
                 this.remoteStream = new MediaStream()
@@ -67,7 +67,7 @@ export class WebRTCPeer {
             this.remoteStream.addTrack(event.track)
         }
 
-        // Handle ICE candidates
+        
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate && this.onIceCandidate) {
                 this.onIceCandidate(event.candidate)
@@ -126,11 +126,11 @@ export class WebRTCPeer {
     }
 
     close() {
-        // Stop all tracks
+        
         this.localStream?.getTracks().forEach(track => track.stop())
         this.remoteStream?.getTracks().forEach(track => track.stop())
 
-        // Close peer connection
+        
         this.peerConnection?.close()
 
         this.localStream = null

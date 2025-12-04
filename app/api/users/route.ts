@@ -14,12 +14,12 @@ export async function GET(req: Request) {
     }
 
     if (query) {
-        // Check if query looks like an email
+        
         const isEmail = query.includes("@")
 
         if (isEmail) {
             const users = await User.find({
-                email: { $regex: `^${query}$`, $options: "i" } // Exact match for email, case insensitive
+                email: { $regex: `^${query}$`, $options: "i" } 
             }).select("-password").limit(10)
             return NextResponse.json(users)
         } else {

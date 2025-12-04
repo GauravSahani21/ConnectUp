@@ -29,13 +29,13 @@ export default function ChatHeader() {
     isOpen: false,
   })
 
-  // Get real-time chat data from chats array
+  
   const activeChat = useMemo(() =>
     chats.find(c => c.id === selectedChat?.id) || selectedChat,
     [chats, selectedChat]
   )
 
-  // Listen for typing events via Socket.io
+  
   useEffect(() => {
     if (!socket || !selectedChat) return
 
@@ -64,7 +64,7 @@ export default function ChatHeader() {
     }
   }, [socket, selectedChat, currentUser])
 
-  // Clear typing users when chat changes
+  
   useEffect(() => {
     setTypingUsers(new Set())
   }, [selectedChat?.id])
@@ -89,7 +89,7 @@ export default function ChatHeader() {
         await unmuteChat(activeChat.id)
         toast.success("Notifications unmuted")
       } else {
-        await muteChat(activeChat.id, 8) // Mute for 8 hours
+        await muteChat(activeChat.id, 8) 
         toast.success("Muted for 8 hours")
       }
     } catch (error) {
@@ -118,7 +118,7 @@ export default function ChatHeader() {
     <>
       <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-10">
         <div className="flex items-center gap-3 flex-1">
-          {/* Back button for mobile */}
+          {}
           <button
             onClick={() => setSelectedChat(null)}
             className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition -ml-2"
@@ -233,7 +233,7 @@ export default function ChatHeader() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Profile Modal */}
+      {}
       {showProfile && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowProfile(false)}>
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md overflow-hidden" onClick={e => e.stopPropagation()}>

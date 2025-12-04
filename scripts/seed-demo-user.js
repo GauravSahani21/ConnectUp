@@ -1,10 +1,10 @@
 const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 
-// MongoDB connection string - update this with your connection string
+
 const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/whatsapp-clone"
 
-// User Schema (matching your model)
+
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -20,12 +20,12 @@ const User = mongoose.models.User || mongoose.model("User", userSchema)
 
 async function seedDemoUser() {
     try {
-        // Connect to MongoDB
+        
         console.log("Connecting to MongoDB...")
         await mongoose.connect(MONGODB_URI)
         console.log("Connected to MongoDB")
 
-        // Check if demo user already exists
+        
         const existingUser = await User.findOne({ email: "demo@example.com" })
         
         if (existingUser) {
@@ -36,10 +36,10 @@ async function seedDemoUser() {
             return
         }
 
-        // Hash password
+        
         const hashedPassword = await bcrypt.hash("password", 10)
 
-        // Create demo user
+        
         const demoUser = await User.create({
             name: "Demo User",
             email: "demo@example.com",

@@ -32,7 +32,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         socketInstance.on('connect', handleConnect)
         socketInstance.on('disconnect', handleDisconnect)
 
-        // Set initial connection state
+        
         setIsConnected(socketInstance.connected)
 
         return () => {

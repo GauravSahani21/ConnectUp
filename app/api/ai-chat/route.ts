@@ -18,7 +18,7 @@ export async function POST(req: Request) {
             )
         }
 
-        // Find or create AI user safely
+        
         const User = (await import("@/models/User")).default
         const aiUser = await User.findOneAndUpdate(
             { email: "ai@whatsapp.clone" },
@@ -34,13 +34,13 @@ export async function POST(req: Request) {
             { new: true, upsert: true }
         )
 
-        // Get recent chat history for context
+        
         const recentMessages = await Message.find({ chatId })
             .sort({ createdAt: -1 })
             .limit(10)
             .lean()
 
-        // Build conversation context
+        
         const conversationHistory = recentMessages
             .reverse()
             .map(msg => {
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
                 }
             })
 
-        // Add system prompt for friendly personality
+        
         const systemPrompt = {
             role: "user",
             parts: [{
@@ -64,13 +64,13 @@ export async function POST(req: Request) {
             parts: [{ text: "Understood! I'll be helpful, friendly, and conversational. 😊" }]
         }
 
-        // Add current user message
+        
         const currentMessage = {
             role: "user",
             parts: [{ text: userMessage }]
         }
 
-        // Call Gemini API
+        
         const response = await fetch(GEMINI_API_URL, {
             method: "POST",
             headers: {
@@ -111,7 +111,7 @@ export async function POST(req: Request) {
             const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
             console.error("Gemini API error response:", JSON.stringify(errorData, null, 2))
 
-            // Extract human-readable error message
+            
             const errorMessage = errorData?.error?.message || errorData?.message || "Failed to get AI response"
             console.error("Gemini API error message:", errorMessage)
 
@@ -124,7 +124,7 @@ export async function POST(req: Request) {
         const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text ||
             "I'm sorry, I couldn't generate a response. Please try again."
 
-        // Save user message
+        
         await Message.create({
             chatId,
             senderId,
@@ -133,7 +133,7 @@ export async function POST(req: Request) {
             status: "sent"
         })
 
-        // Save AI response
+        
         const aiMessage = await Message.create({
             chatId,
             senderId: aiUser._id,
@@ -142,7 +142,7 @@ export async function POST(req: Request) {
             status: "sent"
         })
 
-        // Update chat's last message
+        
         await Chat.findByIdAndUpdate(chatId, {
             lastMessage: {
                 text: aiResponse,

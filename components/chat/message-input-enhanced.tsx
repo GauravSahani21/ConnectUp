@@ -30,7 +30,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
     const timerRef = useRef<NodeJS.Timeout | null>(null)
     const emojiPickerRef = useRef<HTMLDivElement>(null)
 
-    // Close emoji picker when clicking outside
+    
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
@@ -44,7 +44,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
         }
     }, [])
 
-    // Join chat room when chat is selected
+    
     useEffect(() => {
         if (socket && selectedChat) {
             socket.emit('join-chat', selectedChat.id)
@@ -59,12 +59,12 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
         if (!selectedChat || !currentUser || !socket) return
 
-        // Clear existing timeout
+        
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current)
         }
 
-        // Emit typing event
+        
         if (text.length > 0 && !isTyping) {
             setIsTyping(true)
             socket.emit('typing', {
@@ -74,7 +74,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
             })
         }
 
-        // Clear typing status after 3 seconds of inactivity
+        
         typingTimeoutRef.current = setTimeout(() => {
             if (isTyping) {
                 setIsTyping(false)
@@ -90,7 +90,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
     const handleSend = async () => {
         if (!message.trim() || !selectedChat) return
 
-        // Clear typing status immediately
+        
         if (isTyping && socket) {
             setIsTyping(false)
             socket.emit('stopTyping', {
@@ -104,12 +104,12 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
         setMessage("")
         onCancelReply?.()
 
-        // Check if this is an AI chat (participant is AI Assistant)
+        
         const isAIChat = selectedChat.participant?.name === "AI Assistant"
 
         if (isAIChat) {
             try {
-                // Call AI endpoint
+                
                 const response = await fetch("/api/ai-chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -125,14 +125,14 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                     throw new Error(errorData.error || "AI response failed")
                 }
 
-                // Messages are saved by the AI endpoint, just refresh
-                // The messages will be fetched by SWR automatically
+                
+                
             } catch (error) {
                 console.error("AI chat error:", error)
                 toast.error(error instanceof Error ? error.message : "Sorry, I couldn't get a response from the AI. Please try again.")
             }
         } else {
-            // Regular message
+            
             const messageData: any = {
                 text: messageText,
                 type: "text"
@@ -150,13 +150,13 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
         const file = e.target.files?.[0]
         if (!file || !selectedChat) return
 
-        // TODO: Implement actual file upload to server
-        // For now, just show the filename
+        
+        
         const formData = new FormData()
         formData.append("file", file)
 
         try {
-            // Upload file
+            
             const uploadRes = await fetch("/api/upload", {
                 method: "POST",
                 body: formData,
@@ -164,7 +164,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
             const { url, type } = await uploadRes.json()
 
-            // Send message with attachment
+            
             await sendMessage(selectedChat.id, file.name, type, {
                 name: file.name,
                 url,
@@ -228,7 +228,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
             const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" })
             const audioFile = new File([audioBlob], "voice-message.webm", { type: "audio/webm" })
 
-            // Upload audio
+            
             const formData = new FormData()
             formData.append("file", audioFile)
 
@@ -254,7 +254,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                 toast.error("Failed to send voice message")
             }
 
-            // Stop all tracks
+            
             mediaRecorderRef.current?.stream.getTracks().forEach(track => track.stop())
         }
     }
@@ -290,7 +290,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
         }
     }
 
-    // Cleanup on unmount
+    
     useEffect(() => {
         return () => {
             if (typingTimeoutRef.current) {
@@ -303,8 +303,8 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
     return (
         <div className="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-gray-700 p-4">
-            {/* Reply preview */}
-            {/* Reply preview */}
+            {}
+            {}
             {replyTo && (
                 <div className="mb-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border-l-4 border-purple-500 flex items-center justify-between">
                     <div className="flex-1">
@@ -325,7 +325,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
             )}
 
             <div className="flex items-center gap-2 relative">
-                {/* Emoji Picker */}
+                {}
                 {showEmojiPicker && (
                     <div className="absolute bottom-16 left-0 z-50" ref={emojiPickerRef}>
                         <EmojiPicker
@@ -359,7 +359,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                     </div>
                 ) : (
                     <>
-                        {/* Emoji button */}
+                        {}
                         <button
                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                             className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition ${showEmojiPicker ? 'text-green-600' : 'text-gray-600 dark:text-gray-400'}`}
@@ -367,7 +367,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                             <Smile size={24} />
                         </button>
 
-                        {/* Attachment button */}
+                        {}
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
@@ -382,7 +382,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                             accept="image/*,video/*,.pdf,.doc,.docx"
                         />
 
-                        {/* Location button */}
+                        {}
                         <button
                             onClick={() => setShowLocationPicker(true)}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
@@ -391,7 +391,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                             <MapPin size={24} className="text-gray-600 dark:text-gray-400" />
                         </button>
 
-                        {/* Message input */}
+                        {}
                         <input
                             type="text"
                             value={message}
@@ -401,7 +401,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                             className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
                         />
 
-                        {/* Send or Voice button */}
+                        {}
                         {message.trim() ? (
                             <button
                                 onClick={handleSend}
@@ -421,7 +421,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                 )}
             </div>
 
-            {/* Location Picker Modal */}
+            {}
             {showLocationPicker && (
                 <LocationPicker
                     onShare={handleLocationShare}

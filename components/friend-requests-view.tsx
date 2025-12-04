@@ -55,11 +55,11 @@ export default function FriendRequestsView() {
 
     return (
         <div className="w-full md:w-96 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            {/* Header */}
+            {}
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Friend Requests</h1>
 
-                {/* Send Friend Request */}
+                {}
                 <div className="mb-4">
                     <div className="flex gap-2">
                         <input
@@ -81,7 +81,7 @@ export default function FriendRequestsView() {
                     </div>
                 </div>
 
-                {/* Tabs */}
+                {}
                 <div className="flex gap-2">
                     <button
                         onClick={() => setActiveTab("received")}
@@ -104,7 +104,7 @@ export default function FriendRequestsView() {
                 </div>
             </div>
 
-            {/* Request List */}
+            {}
             <div className="flex-1 overflow-y-auto">
                 {activeTab === "received" ? (
                     receivedRequests.length === 0 ? (
@@ -120,7 +120,7 @@ export default function FriendRequestsView() {
                                 className="p-4 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                             >
                                 <div className="flex items-center gap-4">
-                                    {/* Avatar */}
+                                    {}
                                     <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                         {request.senderId.avatar ? (
                                             <img src={request.senderId.avatar} alt={request.senderId.name} className="w-full h-full rounded-full object-cover" />
@@ -131,7 +131,7 @@ export default function FriendRequestsView() {
                                         )}
                                     </div>
 
-                                    {/* Info */}
+                                    {}
                                     <div className="flex-1 min-w-0">
                                         <p className="font-semibold text-gray-900 dark:text-white truncate">
                                             {request.senderId.name}
@@ -141,7 +141,7 @@ export default function FriendRequestsView() {
                                         </p>
                                     </div>
 
-                                    {/* Actions */}
+                                    {}
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handleAccept(request._id)}
@@ -176,7 +176,7 @@ export default function FriendRequestsView() {
                                 className="p-4 border-b dark:border-gray-700"
                             >
                                 <div className="flex items-center gap-4">
-                                    {/* Avatar */}
+                                    {}
                                     <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                         {request.receiverId ? (
                                             <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
@@ -187,7 +187,7 @@ export default function FriendRequestsView() {
                                         )}
                                     </div>
 
-                                    {/* Info */}
+                                    {}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
                                             Pending...

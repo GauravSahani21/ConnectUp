@@ -34,7 +34,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* Call messages get their own styling, not in bubble */}
+      {}
       {message.type === "call" && message.callMetadata ? (
         <CallMessage
           callType={message.callMetadata.callType}
@@ -95,7 +95,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
               />
             ) : (
               <>
-                {/* Image Preview */}
+                {}
                 {message.type === "image" && message.attachment?.url && (
                   <div className="mb-2">
                     <img
@@ -107,7 +107,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
                   </div>
                 )}
 
-                {/* Video Preview */}
+                {}
                 {message.type === "video" && message.attachment?.url && (
                   <div className="mb-2">
                     <video
@@ -121,7 +121,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
                   </div>
                 )}
 
-                {/* File Attachment */}
+                {}
                 {message.type === "file" && message.attachment && (
                   <div className="mb-2 p-3 bg-gray-100 dark:bg-gray-600 rounded-lg flex items-center gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
@@ -145,7 +145,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
                   </div>
                 )}
 
-                {/* Text message */}
+                {}
                 {message.text && <p className="break-words">{message.text}</p>}
 
                 <p
