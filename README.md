@@ -13,6 +13,7 @@ A modern, feature-rich real-time chat application built with Next.js, Socket.IO,
 - **Instant message delivery** with Socket.IO WebSocket connections
 - **Message types**: Text, images, videos, audio, files, voice messages, emojis
 - **Message actions**: Edit, delete, copy messages
+- **Swipe to Reply**: Intuitive swipe gesture to reply to messages
 - **Read receipts** and typing indicators
 - **Location sharing** with map integration
 
@@ -138,8 +139,26 @@ npm run dev
 ```
 http://localhost:3000
 ```
+http://localhost:3000
+```
 
-## 📧 Email Setup (Optional)
+## 🚀 Deployment
+
+### Deploy on Render (Recommended)
+
+This project is configured for easy deployment on [Render](https://render.com).
+
+1.  **Create a Web Service** on Render connected to your GitHub repo.
+2.  **Settings**:
+    *   **Runtime**: Node
+    *   **Build Command**: `npm install && npm run build`
+    *   **Start Command**: `npm start`
+3.  **Environment Variables**:
+    *   `MONGODB_URI`: Your MongoDB connection string
+    *   `NEXT_PUBLIC_APP_URL`: Your Render URL (e.g., `https://your-app.onrender.com`)
+    *   `NODE_ENV`: `production`
+
+> **Note:** The project uses a custom server (`server.js`) for Socket.IO. The `npm start` command is configured to run this server. Vercel deployment is **not recommended** as it does not support custom servers for real-time features.
 
 For friend request email notifications:
 
