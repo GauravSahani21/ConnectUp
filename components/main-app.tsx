@@ -44,7 +44,7 @@ export default function MainApp() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-gray-100 dark:bg-slate-900">
+    <div className="flex h-[100dvh] w-full bg-gray-100 dark:bg-slate-900 overflow-hidden">
       { }
       <LeftNav
         activeView={view}

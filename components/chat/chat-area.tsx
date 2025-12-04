@@ -14,13 +14,13 @@ export default function ChatArea() {
   const [replyTo, setReplyTo] = useState<any>(null)
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
 
-  
+
   const activeChat = useMemo(() =>
     chats.find(c => c.id === selectedChat?.id) || selectedChat,
     [chats, selectedChat]
   )
 
-  
+
   useEffect(() => {
     if (!socket || !selectedChat) return
 
@@ -49,7 +49,7 @@ export default function ChatArea() {
     }
   }, [socket, selectedChat, currentUser])
 
-  
+
   useEffect(() => {
     setTypingUsers(new Set())
   }, [selectedChat?.id])
@@ -62,7 +62,7 @@ export default function ChatArea() {
   const isTyping = typingUsers.size > 0
 
   return (
-    <div className="flex flex-col flex-1 bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900">
+    <div className="flex flex-col h-full max-h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
       <ChatHeader />
       <MessageList messages={chatMessages} isTyping={isTyping} onReply={setReplyTo} />
       <MessageInputEnhanced

@@ -19,7 +19,7 @@ export default function MessageList({ messages, isTyping, onReply }: MessageList
     endRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages, isTyping])
 
-  
+
   const groupedMessages = messages.reduce(
     (acc, msg) => {
       const date = new Date(msg.timestamp).toLocaleDateString()
@@ -31,7 +31,7 @@ export default function MessageList({ messages, isTyping, onReply }: MessageList
   )
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
       {Object.entries(groupedMessages).map(([date, msgs]) => (
         <div key={date}>
           <div className="flex items-center gap-2 my-4">
