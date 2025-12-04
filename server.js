@@ -23,23 +23,25 @@ app.prepare().then(() => {
   })
 
   const io = new Server(httpServer, {
+    path: '/socket.io',
+    addTrailingSlash: false,
     cors: {
-      origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.NEXT_PUBLIC_APP_URL, 'https://connectup-chat.onrender.com', 'https://connectup-87pt.onrender.com'] 
-        : ['http://localhost:3000'],
+      origin: '*',
       methods: ['GET', 'POST'],
       credentials: true
     }
   })
 
-  
+  // Debug logging for Socket.IO
+  io.engine.on("connection_error", (err) => {
+    console.log("Socket.IO Connection Error:", err.req.url, err.code, err.message, err.context);
+  });
+
   const typingUsers = new Map() 
-  
-  
   const userSockets = new Map() 
 
   io.on('connection', (socket) => {
-    console.log('Client connected:', socket.id)
+    console.log('✅ Client connected successfully:', socket.id)
 
     
     socket.on('join-chat', (chatId) => {
