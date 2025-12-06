@@ -139,7 +139,14 @@ export default function FriendRequestsView() {
                                     { }
                                     <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
                                         {request.senderId.avatar ? (
-                                            <img src={request.senderId.avatar} alt={request.senderId.name} className="w-full h-full rounded-full object-cover" />
+                                            <img
+                                                src={request.senderId.avatar}
+                                                alt={request.senderId.name}
+                                                className="w-full h-full rounded-full object-cover"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).src = "/placeholder.svg"
+                                                }}
+                                            />
                                         ) : (
                                             <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                                                 {request.senderId.name[0].toUpperCase()}

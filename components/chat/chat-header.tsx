@@ -116,66 +116,66 @@ export default function ChatHeader() {
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-10">
-        <div className="flex items-center gap-3 flex-1">
+      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-10 gap-2">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           { }
           <button
             onClick={() => setSelectedChat(null)}
-            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition -ml-2"
+            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition -ml-2 flex-shrink-0"
           >
             <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => setShowProfile(true)}>
-            <div className="relative">
+          <div className="flex items-center gap-3 cursor-pointer flex-1 min-w-0" onClick={() => setShowProfile(true)}>
+            <div className="relative flex-shrink-0">
               <img
                 src={participant.avatar || "/placeholder.svg"}
                 alt={participant.name}
-                className="w-12 h-12 rounded-full object-cover"
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/placeholder.svg"
                 }}
               />
               <div
-                className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 ${isOnline ? "bg-green-500" : "bg-gray-400"
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 rounded-full border-2 ${isOnline ? "bg-green-500" : "bg-gray-400"
                   } border-white dark:border-slate-800`}
               />
             </div>
-            <div>
-              <h2 className="font-semibold text-gray-900 dark:text-white">{participant.name}</h2>
-              <p className={`text-xs ${isTyping ? "text-green-600 font-semibold" : "text-gray-500 dark:text-gray-400"}`}>
+            <div className="min-w-0">
+              <h2 className="font-semibold text-gray-900 dark:text-white truncate text-sm md:text-base">{participant.name}</h2>
+              <p className={`text-xs ${isTyping ? "text-green-600 font-semibold" : "text-gray-500 dark:text-gray-400"} truncate`}>
                 {statusText}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
           <button
             onClick={() => initiateCall(participant.id, participant.name, participant.avatar, "audio")}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+            className="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
             title="Voice call"
           >
-            <Phone size={20} className="text-gray-700 dark:text-gray-300" />
+            <Phone size={20} className="w-5 h-5 md:w-6 md:h-6 text-gray-700 dark:text-gray-300" />
           </button>
           <button
             onClick={() => initiateCall(participant.id, participant.name, participant.avatar, "video")}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+            className="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
             title="Video call"
           >
-            <Video size={20} className="text-gray-700 dark:text-gray-300" />
+            <Video size={20} className="w-5 h-5 md:w-6 md:h-6 text-gray-700 dark:text-gray-300" />
           </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition">
+          <button className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition">
             <Search size={20} className="text-gray-700 dark:text-gray-300" />
           </button>
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+              className="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
             >
-              <MoreVertical size={20} className="text-gray-700 dark:text-gray-300" />
+              <MoreVertical size={20} className="w-5 h-5 md:w-6 md:h-6 text-gray-700 dark:text-gray-300" />
             </button>
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-700 rounded-lg shadow-lg z-20 border border-gray-100 dark:border-gray-600">
