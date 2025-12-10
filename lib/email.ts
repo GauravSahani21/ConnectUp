@@ -8,19 +8,19 @@ interface EmailOptions {
 
 
 const createTransporter = () => {
-    
+
     return nodemailer.createTransport({
         service: "gmail",
         auth: {
-            user: process.env.EMAIL_USER, 
-            pass: process.env.EMAIL_PASSWORD, 
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD,
         },
     })
 }
 
 export async function sendEmail({ to, subject, html }: EmailOptions) {
     try {
-        
+
         if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
             console.log("Email credentials not configured. Skipping email send.")
             console.log("To:", to)
@@ -365,3 +365,24 @@ export function generateRequestAcceptedEmail(accepter: {
     `
 }
 
+
+export function generateWelcomeEmail(name: string) {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to ConnectUp</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #10b981;">Welcome to ConnectUp, ${name}!</h1>
+        <p>We are thrilled to have you join our community.</p>
+        <p>Start connecting with friends and family today!</p>
+        <br>
+        <p>Best regards,<br>The ConnectUp Team</p>
+    </div>
+</body>
+</html>
+    `
+}

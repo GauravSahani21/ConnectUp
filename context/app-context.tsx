@@ -99,14 +99,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isDarkMode, setIsDarkModeState] = useState(false)
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
 
-  
+
   const { data: chatsData, mutate: mutateChats } = useSWR(
     currentUser ? `/api/chats?userId=${currentUser.id}` : null,
     fetcher,
     { refreshInterval: 3000 }
   )
 
-  
+
   const { data: messagesData, mutate: mutateMessages } = useSWR(
     selectedChat && currentUser ? `/api/messages?chatId=${selectedChat.id}&userId=${currentUser.id}` : null,
     fetcher,
@@ -120,7 +120,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    
+
     const storedUser = localStorage.getItem("connectup-user")
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser))
@@ -142,6 +142,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     localStorage.setItem("theme", dark ? "dark" : "light")
   }, [])
+
+  // Clear selectedChat if it's not in the current chats list (phantom chat fix)
+  useEffect(() => {
+    if (selectedChat && chatsData && chatsData.length > 0) {
+      const chatExists = chatsData.find((c: any) => c.id === selectedChat.id)
+      if (!chatExists) {
+        setSelectedChat(null)
+      }
+    } else if (chatsData && chatsData.length === 0 && selectedChat) {
+      setSelectedChat(null)
+    }
+  }, [chatsData, selectedChat])
 
   const login = async (email: string, password: string) => {
     const res = await fetch("/api/auth", {
@@ -203,14 +215,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(messageData),
       })
-      
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to send message");
       }
     } catch (error) {
       console.error("Failed to send message:", error);
-      
+
     }
     mutateMessages()
     mutateChats()
@@ -251,7 +263,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return res.json()
   }
 
-  
+
   const updateUserStatus = () => { }
   const searchChats = (query: string) => chats.filter(c => c.participant.name.toLowerCase().includes(query.toLowerCase()))
 
@@ -359,7 +371,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mutateChats()
   }
 
-  
+
   const { data: friendRequestsData, mutate: mutateFriendRequests } = useSWR(
     currentUser ? `/api/friend-requests?userId=${currentUser.id}` : null,
     fetcher,
@@ -401,7 +413,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     chats,
     selectedChat,
     messages,
-    users: [], 
+    users: [],
     friendRequests,
     setCurrentUser,
     setIsDarkMode,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import dbConnect from "@/lib/db"
 import User from "@/models/User"
 import bcrypt from "bcryptjs"
+import { sendEmail, generateWelcomeEmail } from "@/lib/email"
 
 export async function POST(req: Request) {
     try {
@@ -10,7 +11,6 @@ export async function POST(req: Request) {
         const { action, email, password, name } = body
         console.log("Auth Request:", { action, email, passwordLength: password?.length, body })
 
-        
         if (!action) {
             return NextResponse.json({ error: "Action is required" }, { status: 400 })
         }
@@ -30,8 +30,17 @@ export async function POST(req: Request) {
                 name,
                 email,
                 password: hashedPassword,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`, 
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`,
             })
+
+            // Send welcome email (non-blocking)
+            if (user.email) {
+                sendEmail({
+                    to: user.email,
+                    subject: "Welcome to ConnectUp!",
+                    html: generateWelcomeEmail(user.name)
+                }).catch((err: any) => console.error("Welcome email failed:", err))
+            }
 
             return NextResponse.json({
                 user: {

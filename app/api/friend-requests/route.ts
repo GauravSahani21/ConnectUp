@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     console.log("Friend request POST received:", { senderId, receiverEmail })
 
     try {
-        
+
         const receiver = await User.findOne({ email: receiverEmail })
         if (!receiver) {
             return NextResponse.json({ error: "User not found" }, { status: 404 })
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Cannot send friend request to yourself" }, { status: 400 })
         }
 
-        
+
         const existingRequest = await FriendRequest.findOne({
             $or: [
                 { senderId, receiverId: receiver._id, status: "pending" },
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Friend request already pending" }, { status: 400 })
         }
 
-        
+
         const existingChat = await Chat.findOne({
             participants: { $all: [senderId, receiver._id] }
         })
@@ -43,33 +43,41 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "You are already friends" }, { status: 400 })
         }
 
-        
+
         const request = await FriendRequest.create({
             senderId,
             receiverId: receiver._id,
             status: "pending"
         })
 
-        
+
         const sender = await User.findById(senderId)
 
-        
+
         if (sender && receiver.email) {
-            try {
-                await sendEmail({
-                    to: receiver.email,
-                    subject: `${sender.name} sent you a friend request`,
-                    html: generateFriendRequestEmail({
-                        name: sender.name,
-                        email: sender.email,
-                        bio: sender.bio,
-                        avatar: sender.avatar
-                    })
+
+            // Notify Receiver
+            sendEmail({
+                to: receiver.email,
+                subject: `${sender.name} sent you a friend request`,
+                html: generateFriendRequestEmail({
+                    name: sender.name,
+                    email: sender.email,
+                    bio: sender.bio,
+                    avatar: sender.avatar
                 })
-            } catch (emailError) {
+            }).catch(emailError => {
                 console.error("Failed to send friend request email:", emailError)
-                
-            }
+            })
+
+            // Notify Sender (Confirmation)
+            import("@/lib/email").then(({ sendEmail, generateFriendRequestSentEmail }) => {
+                sendEmail({
+                    to: sender.email,
+                    subject: `Friend Request Sent to ${receiver.name}`,
+                    html: generateFriendRequestSentEmail(receiver.name)
+                }).catch(err => console.error("Sender confirmation email failed:", err))
+            })
         }
 
         return NextResponse.json({ success: true, request })
@@ -89,7 +97,7 @@ export async function GET(req: Request) {
     }
 
     try {
-        
+
         const requests = await FriendRequest.find({
             receiverId: userId,
             status: "pending"
@@ -116,7 +124,7 @@ export async function PUT(req: Request) {
         await request.save()
 
         if (status === "accepted") {
-            
+
             const chat = await Chat.create({
                 participants: [request.senderId, request.receiverId],
                 unreadCounts: {
@@ -125,29 +133,25 @@ export async function PUT(req: Request) {
                 }
             })
 
-            
+
             const sender = await User.findById(request.senderId)
             const accepter = await User.findById(request.receiverId)
 
             if (sender && accepter && sender.email) {
-                try {
-                    await sendEmail({
-                        to: sender.email,
-                        subject: `${accepter.name} accepted your friend request!`,
-                        html: generateRequestAcceptedEmail({
-                            name: accepter.name,
-                            email: accepter.email,
-                            bio: accepter.bio,
-                            avatar: accepter.avatar
-                        })
-                    })
-                } catch (emailError) {
-                    console.error("Failed to send acceptance email:", emailError)
-                    
-                }
-            }
 
-            return NextResponse.json({ success: true, chat })
+                sendEmail({
+                    to: sender.email,
+                    subject: `${accepter.name} accepted your friend request!`,
+                    html: generateRequestAcceptedEmail({
+                        name: accepter.name,
+                        email: accepter.email,
+                        bio: accepter.bio,
+                        avatar: accepter.avatar
+                    })
+                }).catch(emailError => {
+                    console.error("Failed to send acceptance email:", emailError)
+                })
+            } return NextResponse.json({ success: true, chat })
         }
 
         return NextResponse.json({ success: true })

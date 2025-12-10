@@ -30,14 +30,16 @@ export async function POST(req: Request) {
             type = "document"
         }
 
-        return NextResponse.json({
+        const response = {
             success: true,
             url: result.secure_url, // Cloudinary URL
             type,
             filename: file.name,
             size: file.size,
             mimeType
-        })
+        }
+        console.log("Upload successful, returning:", response)
+        return NextResponse.json(response)
     } catch (error) {
         console.error("Upload error:", error)
         return NextResponse.json({ error: "Upload failed" }, { status: 500 })
