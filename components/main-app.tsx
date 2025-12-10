@@ -67,7 +67,7 @@ export default function MainApp() {
         </div>
 
         {/* Chat/Content Area */}
-        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1 h-full overflow-hidden`}>
+        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 h-full overflow-hidden`}>
           {view === "chats" && <ChatArea />}
           {view === "settings" && <ProfileSettings onBack={() => setView("chats")} isSettings />}
           {view === "calls" && selectedChat && <ChatArea />}

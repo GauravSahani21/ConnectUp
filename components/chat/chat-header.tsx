@@ -116,7 +116,7 @@ export default function ChatHeader() {
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-10 gap-2">
+      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between relative z-50 gap-2">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           { }
           <button
