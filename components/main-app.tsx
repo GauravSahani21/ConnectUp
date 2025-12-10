@@ -55,7 +55,7 @@ export default function MainApp() {
       {/* Main Content */}
       <div className={`flex flex-1 overflow-hidden ${selectedChat ? 'pb-0' : 'pb-16'} md:pb-0`}>
         {/* Sidebar Area */}
-        <div className={`${(selectedChat && view === "chats") || view === "settings" ? 'hidden md:flex' : 'flex'} w-full md:w-auto h-full`}>
+        <div className={`${(selectedChat && view === "chats") || view === "settings" ? 'hidden md:flex' : 'flex'} w-full md:w-auto h-full flex-shrink-0`}>
           {view === "chats" && (
             <ChatSidebar
               view="chat"
@@ -67,7 +67,7 @@ export default function MainApp() {
         </div>
 
         {/* Chat/Content Area */}
-        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 h-full overflow-hidden`}>
+        <div className={`${selectedChat || view !== "chats" ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 w-full h-full overflow-hidden`}>
           {view === "chats" && <ChatArea />}
           {view === "settings" && <ProfileSettings onBack={() => setView("chats")} isSettings />}
           {view === "calls" && selectedChat && <ChatArea />}

@@ -62,7 +62,7 @@ export default function ChatArea() {
   const isTyping = typingUsers.size > 0
 
   return (
-    <div className="flex flex-col h-full max-h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
+    <div className="flex flex-col w-full h-full max-h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
       <ChatHeader />
       <MessageList messages={chatMessages} isTyping={isTyping} onReply={setReplyTo} />
       <MessageInputEnhanced
