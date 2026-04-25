@@ -157,10 +157,10 @@ app.prepare().then(() => {
       }
     })
 
-    socket.on('call:offer', ({ callId, receiverId, offer }) => {
+    socket.on('call:offer', ({ callId, receiverId, callerId, offer }) => {
       const receiverSocket = userSockets.get(receiverId)
       if (receiverSocket) {
-        io.to(receiverSocket).emit('call:offer', { callId, offer })
+        io.to(receiverSocket).emit('call:offer', { callId, callerId, offer })
       }
     })
 

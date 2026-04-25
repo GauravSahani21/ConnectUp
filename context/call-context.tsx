@@ -40,8 +40,8 @@ export function CallProvider({ children }: { children: ReactNode }) {
     const callTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([])
     const webrtcPeerRef = useRef<WebRTCPeer | null>(null)
-    const incomingCallRef = useRef<typeof incomingCall>(null)  // ← ref for closures
-    // pendingOfferRef MUST be declared before the useEffect that references it
+    const incomingCallRef = useRef<typeof incomingCall>(null)
+    const otherUserRef = useRef<typeof otherUser>(null)
     const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null)
 
     // Sync refs with state for event handlers
@@ -52,6 +52,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         incomingCallRef.current = incomingCall
     }, [incomingCall])
+
+    useEffect(() => {
+        otherUserRef.current = otherUser
+    }, [otherUser])
 
     useEffect(() => {
         if (!socket) return
@@ -114,29 +118,24 @@ export function CallProvider({ children }: { children: ReactNode }) {
             endCall()
         }
 
-        const handleOffer = async (data: { callId: string; offer: RTCSessionDescriptionInit }) => {
+        const handleOffer = async (data: { callId: string; offer: RTCSessionDescriptionInit; callerId?: string }) => {
             if (webrtcPeerRef.current) {
                 // Peer is ready (answering) - process immediately
-                const callerId = incomingCallRef.current?.callerId
+                const callerId = incomingCallRef.current?.callerId || otherUserRef.current?.id || data.callerId
                 await webrtcPeerRef.current.setRemoteDescription(data.offer)
                 const answer = await webrtcPeerRef.current.createAnswer()
-                socket.emit('call:answer-sdp', {
-                    callId: data.callId,
-                    callerId,
-                    answer
-                })
+                if (callerId) {
+                    socket.emit('call:answer-sdp', {
+                        callId: data.callId,
+                        callerId,
+                        answer
+                    })
+                }
             } else {
                 // Peer not ready yet — store offer for answerCall to process
                 pendingOfferRef.current = data.offer
             }
         }
-
-        // Actually, the issue is simpler: 
-        // A sends offer. B receives offer. B hasn't answered. 
-        // B answers. B creates peer. B needs that offer.
-        // CURRENT CODE: handleOffer does nothing if webrtcPeer is null.
-        // So B never sets remote description!
-        // FIX: We need to store the offer if peer is not ready.
 
         const handleAnswerSDP = async (data: { callId: string; answer: RTCSessionDescriptionInit }) => {
             if (webrtcPeerRef.current) {
@@ -219,6 +218,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
             socket.emit('call:offer', {
                 callId,
                 receiverId: userId,
+                callerId: currentUser.id,
                 offer
             })
         } catch (error) {
