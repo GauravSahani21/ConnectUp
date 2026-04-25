@@ -51,7 +51,9 @@ export default function ChatSidebar({ view, onViewChange, onNewGroup }: ChatSide
         {/* Header */}
         <div className="bg-[#f0f2f5] dark:bg-[#202c33] px-4 py-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">ConnectUp</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Hey, {currentUser?.name?.split(" ")[0] ?? "ConnectUp"} 👋
+            </h1>
             <div className="flex gap-1">
               <button
                 onClick={() => setShowNewChatModal(true)}
