@@ -21,8 +21,6 @@ const UserSchema = new mongoose.Schema({
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 })
 
-
-UserSchema.index({ email: 1 })
 UserSchema.index({ name: "text" })
 
 export default mongoose.models.User || mongoose.model("User", UserSchema)
