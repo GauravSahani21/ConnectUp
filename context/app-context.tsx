@@ -144,7 +144,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // ─── Load persisted user + theme ─────────────────────────────────────────
   useEffect(() => {
-    const storedUser = localStorage.getItem("connectup-user")
+    const storedUser = sessionStorage.getItem("connectup-user")
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser))
     }
@@ -269,7 +269,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const data = await res.json()
     if (res.ok) {
       setCurrentUser(data.user)
-      localStorage.setItem("connectup-user", JSON.stringify(data.user))
+      sessionStorage.setItem("connectup-user", JSON.stringify(data.user))
     } else {
       throw new Error(data.error)
     }
@@ -284,7 +284,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const data = await res.json()
     if (res.ok) {
       setCurrentUser(data.user)
-      localStorage.setItem("connectup-user", JSON.stringify(data.user))
+      sessionStorage.setItem("connectup-user", JSON.stringify(data.user))
     } else {
       throw new Error(data.error)
     }
@@ -296,7 +296,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       socketRef.current = null
     }
     setCurrentUser(null)
-    localStorage.removeItem("connectup-user")
+    sessionStorage.removeItem("connectup-user")
     setSelectedChatState(null)
   }
 
@@ -528,7 +528,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     const updatedUser = await res.json()
     setCurrentUser(updatedUser)
-    localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+    sessionStorage.setItem("connectup-user", JSON.stringify(updatedUser))
   }
 
   const searchUsers = async (query: string) => {
@@ -546,7 +546,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (res.ok) {
       const updatedUser = await res.json()
       setCurrentUser(updatedUser)
-      localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+      sessionStorage.setItem("connectup-user", JSON.stringify(updatedUser))
     }
   }
 
@@ -560,7 +560,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (res.ok) {
       const updatedUser = await res.json()
       setCurrentUser(updatedUser)
-      localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+      sessionStorage.setItem("connectup-user", JSON.stringify(updatedUser))
     }
   }
 
