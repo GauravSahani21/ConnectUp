@@ -3,6 +3,7 @@ import dbConnect from "@/lib/db"
 import Chat from "@/models/Chat"
 import User from "@/models/User"
 import Message from "@/models/Message"
+import mongoose from "mongoose"
 
 export async function GET(req: Request) {
     await dbConnect()
@@ -11,32 +12,59 @@ export async function GET(req: Request) {
 
     if (!userId) return NextResponse.json({ error: "UserId required" }, { status: 400 })
 
+    const userObjectId = new mongoose.Types.ObjectId(userId)
+
     const chats = await Chat.find({
         participants: userId,
-        $or: [
-            { archivedBy: { $exists: false } },
-            { archivedBy: { $ne: userId } }
-        ]
+        archivedBy: { $not: { $elemMatch: { $eq: userObjectId } } }
     })
         .populate("participants", "name avatar status lastSeen email")
         .sort({ updatedAt: -1 })
 
 
     const formattedChats = chats.map(chat => {
-        const participant = chat.participants.find((p: any) => p._id.toString() !== userId)
-
-
-        if (!participant) return null
-
-        const isAI = participant.email === "ai@whatsapp.clone" || participant.email === "ai@assistant.com"
-        const isPinned = chat.pinnedBy?.includes(userId) || isAI
+        const isPinned = chat.pinnedBy?.includes(userId)
         const mutedUntil = chat.mutedBy?.find((m: any) => m.userId.toString() === userId)?.until
         const isMuted = mutedUntil && new Date(mutedUntil) > new Date()
-
-
         const typingUsers = chat.typingUsers
             ?.filter((t: any) => t.userId.toString() !== userId)
             ?.map((t: any) => t.userId) || []
+
+        if (chat.isGroup) {
+            return {
+                id: chat._id,
+                participantId: chat._id,
+                participant: {
+                    id: chat._id,
+                    name: chat.groupName,
+                    email: "",
+                    avatar: chat.groupAvatar || "/placeholder.svg",
+                    status: "group",
+                    lastSeen: new Date()
+                },
+                isGroup: true,
+                groupName: chat.groupName,
+                groupAvatar: chat.groupAvatar,
+                admins: chat.admins,
+                participants: chat.participants.map((p: any) => ({
+                    id: p._id,
+                    name: p.name,
+                    avatar: p.avatar,
+                    status: p.status
+                })),
+                lastMessage: chat.lastMessage,
+                unreadCount: chat.unreadCounts?.get(userId) || 0,
+                pinnedAt: isPinned ? new Date() : undefined,
+                mutedUntil: isMuted ? mutedUntil : undefined,
+                typingUsers
+            }
+        }
+
+        const participant = chat.participants.find((p: any) => p._id.toString() !== userId)
+        if (!participant) return null
+
+        const isAI = participant.email === "ai@whatsapp.clone" || participant.email === "ai@assistant.com"
+        const finalIsPinned = isPinned || isAI
 
         return {
             id: chat._id,
@@ -49,9 +77,10 @@ export async function GET(req: Request) {
                 status: typingUsers.length > 0 ? "typing" : participant.status,
                 lastSeen: participant.lastSeen
             },
+            isGroup: false,
             lastMessage: chat.lastMessage,
             unreadCount: chat.unreadCounts?.get(userId) || 0,
-            pinnedAt: isPinned ? new Date() : undefined,
+            pinnedAt: finalIsPinned ? new Date() : undefined,
             mutedUntil: isMuted ? mutedUntil : undefined,
             typingUsers
         }

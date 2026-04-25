@@ -40,11 +40,18 @@ export function CallProvider({ children }: { children: ReactNode }) {
     const callTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const iceCandidatesQueue = useRef<RTCIceCandidateInit[]>([])
     const webrtcPeerRef = useRef<WebRTCPeer | null>(null)
+    const incomingCallRef = useRef<typeof incomingCall>(null)  // ← ref for closures
+    // pendingOfferRef MUST be declared before the useEffect that references it
+    const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null)
 
-    // Sync ref with state for event handlers
+    // Sync refs with state for event handlers
     useEffect(() => {
         webrtcPeerRef.current = webrtcPeer
     }, [webrtcPeer])
+
+    useEffect(() => {
+        incomingCallRef.current = incomingCall
+    }, [incomingCall])
 
     useEffect(() => {
         if (!socket) return
@@ -98,53 +105,28 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
         const handleCallEnded = () => {
             console.log('Call ended by other user')
+            // Cancel any pending timeout (prevents phantom missed-call notification)
+            if (callTimeoutRef.current) {
+                clearTimeout(callTimeoutRef.current)
+                callTimeoutRef.current = null
+            }
+            setIncomingCall(null)
             endCall()
         }
 
         const handleOffer = async (data: { callId: string; offer: RTCSessionDescriptionInit }) => {
-            // If offer comes before we started answering (shouldn't happen in this flow but good safety)
-            // We might need to store it if we were doing auto-answer, but here we wait for user action.
-            // Actually, handleOffer is for the callee. But we only init peer when answering.
-            // Wait, typical flow: 
-            // 1. A inits call -> sends 'call:initiate' -> B gets 'call:incoming'
-            // 2. B answers -> sends 'call:answer' -> A gets 'call:answered'
-            // 3. A creates offer -> sends 'call:offer' -> B gets 'call:offer'
-            // So B *should* have peer ready when 'call:offer' arrives if they clicked answer.
-
-            // However, if we change flow to: A sends offer WITH initiate, then B needs to answer and process offer.
-            // Current flow seems to be: A waits for 'call:answer' before sending offer?
-            // checking initiateCall: 
-            // socket.emit('call:initiate', ...) 
-            // const offer = await peer.createOffer() 
-            // socket.emit('call:offer', ...)
-            // It sends BOTH.
-
-            // So B gets 'call:incoming' AND 'call:offer' almost same time.
-            // But B hasn't answered yet. 'call:incoming' shows modal. 
-            // 'call:offer' logic:
             if (webrtcPeerRef.current) {
+                // Peer is ready (answering) - process immediately
+                const callerId = incomingCallRef.current?.callerId
                 await webrtcPeerRef.current.setRemoteDescription(data.offer)
                 const answer = await webrtcPeerRef.current.createAnswer()
                 socket.emit('call:answer-sdp', {
                     callId: data.callId,
-                    callerId: otherUser?.id, // NOTE: otherUser might be null if not set yet? 
-                    // otherUser is set in answerCall. 
-                    // We need to ensure we have the ID. 
-                    // But wait, handleOffer uses 'otherUser' from closure.
+                    callerId,
                     answer
                 })
             } else {
-                // Store offer to process after answer? 
-                // Actually, if we haven't answered, we don't have a peer.
-                // We should probably store the offer in a specific ref if it comes early?
-                // But in `answerCall` we create peer.
-                // The `handleOffer` might run before or after `answerCall`.
-                // If B clicks answer, `answerCall` runs. 
-                // Use a ref for pending offer?
-                // Let's rely on the fact that if we haven't answered, we just ignore the offer 
-                // and rely on the fact that `initiateCall` sends offer immediately 
-                // BUT wait, `handleOffer` just sets remote desc and sends answer.
-                // We need to do this ONLY after we decided to answer.
+                // Peer not ready yet — store offer for answerCall to process
                 pendingOfferRef.current = data.offer
             }
         }
@@ -245,23 +227,7 @@ export function CallProvider({ children }: { children: ReactNode }) {
         }
     }, [socket, currentUser])
 
-    const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null)
 
-    // Update handleOffer in the useEffect above too, but I can't effectively multi-edit the same block easily due to size.
-    // Instead, I will rewrite the useEffect logic AND the answerCall method here.
-    // Wait, I already overwrote useEffect in previous step but I left handleOffer logic explicitly saying "This needs fixing too".
-    // I need to update that useEffect again to fix handleOffer, AND update answerCall.
-    // Let's do answerCall first, then I'll fix the useEffect with another replace.
-    // Actually, I can do it all if I target the right lines.
-
-    // Changing strategy: I will replace the previously inserted useEffect block to include the pendingOfferRef logic properly,
-    // and then I will replace answerCall.
-
-    // Step 1: Fix handleOffer in useEffect (I'll re-target the useEffect I just wrote or slightly different range if lines shifted).
-    // The previous tool call output shows the file content lines shifted.
-    // It's safer to just replace `answerCall` first, then go back and fix `handleOffer` logic in the effect? 
-    // No, `handleOffer` is inside the effect. 
-    // I will modify `answerCall` to process `pendingOfferRef.current`.
 
     const answerCall = useCallback(async () => {
         if (!socket || !currentUser || !incomingCall) return

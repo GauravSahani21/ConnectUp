@@ -138,15 +138,24 @@ export default function LocationPicker({ onShare, onCancel }: LocationPickerProp
                         <div>
                             {}
                             <div className="mb-4 rounded-lg overflow-hidden">
-                                <img
-                                    src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ff0000(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},14,0/400x200@2x?access_token=NEXT_PUBLIC_MAPBOX_TOKEN_PLACEHOLDER`}
-                                    alt="Location preview"
-                                    className="w-full h-48 object-cover"
-                                    onError={(e) => {
-                                        
-                                        e.currentTarget.src = `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`
-                                    }}
-                                />
+                                {process.env.NEXT_PUBLIC_MAPBOX_TOKEN ? (
+                                    <img
+                                        src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ff0000(${location.longitude},${location.latitude})/${location.longitude},${location.latitude},14,0/400x200@2x?access_token=${process.env.NEXT_PUBLIC_MAPBOX_TOKEN}`}
+                                        alt="Location preview"
+                                        className="w-full h-48 object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none'
+                                        }}
+                                    />
+                                ) : (
+                                    <iframe
+                                        title="Location Map"
+                                        width="100%"
+                                        height="192"
+                                        style={{ border: 0 }}
+                                        src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`}
+                                    />
+                                )}
                             </div>
 
                             {}

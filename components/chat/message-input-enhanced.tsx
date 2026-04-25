@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useApp } from "@/context/app-context"
 import { useSocket } from "@/context/socket-context"
-import { Send, Paperclip, Image as ImageIcon, Mic, X, Smile, Trash2, Check, MapPin } from "lucide-react"
+import { Send, Paperclip, Mic, X, Smile, Trash2, Check, MapPin, Camera } from "lucide-react"
 import { toast } from "sonner"
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react"
 import LocationPicker from "./location-picker"
@@ -18,6 +18,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
     const { socket } = useSocket()
     const [message, setMessage] = useState("")
     const [isTyping, setIsTyping] = useState(false)
+    const isTypingRef = useRef(false)  // ← tracks live typing state for closures
     const [showEmojiPicker, setShowEmojiPicker] = useState(false)
     const [isRecording, setIsRecording] = useState(false)
     const [recordingDuration, setRecordingDuration] = useState(0)
@@ -25,6 +26,7 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const cameraInputRef = useRef<HTMLInputElement>(null)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const audioChunksRef = useRef<Blob[]>([])
     const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -59,24 +61,34 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
         if (!selectedChat || !currentUser || !socket) return
 
-
         if (typingTimeoutRef.current) {
             clearTimeout(typingTimeoutRef.current)
         }
 
-
-        if (text.length > 0 && !isTyping) {
+        if (text.length > 0 && !isTypingRef.current) {
+            isTypingRef.current = true
             setIsTyping(true)
             socket.emit('typing', {
                 chatId: selectedChat.id,
                 userId: currentUser.id,
                 userName: currentUser.name
             })
+        } else if (text.length === 0 && isTypingRef.current) {
+            // Immediately stop when text is cleared
+            isTypingRef.current = false
+            setIsTyping(false)
+            socket.emit('stopTyping', {
+                chatId: selectedChat.id,
+                userId: currentUser.id,
+                userName: currentUser.name
+            })
+            return
         }
 
-
+        // Auto-stop after 3 seconds of no typing
         typingTimeoutRef.current = setTimeout(() => {
-            if (isTyping) {
+            if (isTypingRef.current) {
+                isTypingRef.current = false
                 setIsTyping(false)
                 socket.emit('stopTyping', {
                     chatId: selectedChat.id,
@@ -90,8 +102,9 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
     const handleSend = async () => {
         if (!message.trim() || !selectedChat) return
 
-
-        if (isTyping && socket) {
+        // Stop typing indicator
+        if (isTypingRef.current && socket) {
+            isTypingRef.current = false
             setIsTyping(false)
             socket.emit('stopTyping', {
                 chatId: selectedChat.id,
@@ -102,14 +115,13 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
 
         const messageText = message
         setMessage("")
+        const currentReplyTo = replyTo?.id
         onCancelReply?.()
-
 
         const isAIChat = selectedChat.participant?.name === "AI Assistant"
 
         if (isAIChat) {
             try {
-
                 const response = await fetch("/api/ai-chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -124,25 +136,13 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                     const errorData = await response.json().catch(() => ({ error: "Unknown error" }))
                     throw new Error(errorData.error || "AI response failed")
                 }
-
-
-
             } catch (error) {
                 console.error("AI chat error:", error)
                 toast.error(error instanceof Error ? error.message : "Sorry, I couldn't get a response from the AI. Please try again.")
             }
         } else {
-
-            const messageData: any = {
-                text: messageText,
-                type: "text"
-            }
-
-            if (replyTo) {
-                messageData.replyTo = replyTo.id
-            }
-
-            await sendMessage(selectedChat.id, messageText, "text", undefined)
+            // Pass replyTo correctly to sendMessage
+            await sendMessage(selectedChat.id, messageText, "text", undefined, undefined, currentReplyTo)
         }
     }
 
@@ -296,8 +296,17 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
             if (typingTimeoutRef.current) {
                 clearTimeout(typingTimeoutRef.current)
             }
+            // Always send stopTyping on unmount (chat switch, logout, etc.)
+            if (isTypingRef.current && socket && selectedChat && currentUser) {
+                isTypingRef.current = false
+                socket.emit('stopTyping', {
+                    chatId: selectedChat.id,
+                    userId: currentUser.id,
+                    userName: currentUser.name
+                })
+            }
         }
-    }, [])
+    }, [socket, selectedChat, currentUser])
 
     if (!selectedChat) return null
 
@@ -382,6 +391,23 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                             accept="image/*,video/*,.pdf,.doc,.docx"
                         />
 
+                        {/* Camera button */}
+                        <button
+                            onClick={() => cameraInputRef.current?.click()}
+                            className="p-1.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition"
+                            title="Take photo"
+                        >
+                            <Camera size={24} className="w-5 h-5 md:w-6 md:h-6 text-gray-600 dark:text-gray-400" />
+                        </button>
+                        <input
+                            ref={cameraInputRef}
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                            accept="image/*"
+                            capture="environment"
+                        />
+
                         { }
                         <button
                             onClick={() => setShowLocationPicker(true)}
@@ -392,13 +418,25 @@ export default function MessageInputEnhanced({ replyTo, onCancelReply }: Message
                         </button>
 
                         { }
-                        <input
-                            type="text"
+                        <textarea
+                            rows={1}
                             value={message}
-                            onChange={(e) => handleTyping(e.target.value)}
-                            onKeyPress={handleKeyPress}
+                            onChange={(e) => {
+                                handleTyping(e.target.value)
+                                // Auto-resize
+                                e.target.style.height = 'auto'
+                                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px'
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault()
+                                    handleSend()
+                                }
+                                if (e.key === 'Escape') onCancelReply?.()
+                            }}
                             placeholder="Type a message..."
-                            className="flex-1 min-w-0 px-3 py-2 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-700 rounded-full text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base"
+                            style={{ resize: 'none', overflowY: 'hidden' }}
+                            className="flex-1 min-w-0 px-3 py-2 md:px-4 md:py-2 bg-gray-100 dark:bg-gray-700 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm md:text-base leading-5"
                         />
 
                         { }

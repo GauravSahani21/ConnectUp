@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, type ReactNode, useEffect } from "react"
+import { createContext, useContext, useState, useCallback, type ReactNode, useEffect, useRef } from "react"
 import useSWR from "swr"
 
 export interface User {
@@ -12,22 +12,38 @@ export interface User {
   status: "online" | "offline" | "typing"
   bio: string
   lastSeen: Date
+  blockedUsers?: string[]
 }
 
 export interface Message {
   id: string
   chatId: string
   senderId: string
+  senderName?: string
   text: string
   timestamp: Date
   read: boolean
-  type: "text" | "image" | "audio" | "file" | "video" | "call"
+  status: "sent" | "delivered" | "read"
+  type: "text" | "image" | "audio" | "file" | "video" | "call" | "location"
   attachment?: {
     name: string
     url: string
     size: string
     mimeType?: string
+    duration?: number
   }
+  location?: {
+    latitude: number
+    longitude: number
+    address?: string
+  }
+  replyTo?: any
+  forwardedFrom?: any
+  reactions?: Array<{ userId: string; emoji: string }>
+  starred?: boolean
+  edited?: boolean
+  editedAt?: Date
+  deletedForEveryone?: boolean
   callMetadata?: {
     callType: "audio" | "video"
     duration: number
@@ -40,10 +56,11 @@ export interface Chat {
   id: string
   participantId: string
   participant: User
-  lastMessage?: Message
+  lastMessage?: any
   unreadCount: number
   pinnedAt?: Date
   mutedUntil?: Date
+  isArchived?: boolean
 }
 
 export interface FriendRequest {
@@ -68,12 +85,12 @@ interface AppContextType {
   setIsDarkMode: (dark: boolean) => void
   selectChat: (chat: Chat) => void
   setSelectedChat: (chat: Chat | null) => void
-  sendMessage: (chatId: string, text: string, type?: string, attachment?: any, location?: { latitude: number; longitude: number; address?: string }) => Promise<void>
+  sendMessage: (chatId: string, text: string, type?: string, attachment?: any, location?: any, replyTo?: string) => Promise<void>
   createOrSelectChat: (participantId: string) => Promise<void>
   updateUserStatus: (userId: string, status: "online" | "offline" | "typing") => void
   searchChats: (query: string) => Chat[]
   searchUsers: (query: string) => Promise<User[]>
-  deleteMessage: (chatId: string, messageId: string) => Promise<void>
+  deleteMessage: (chatId: string, messageId: string, forEveryone?: boolean) => Promise<void>
   editMessage: (chatId: string, messageId: string, newText: string) => void
   markChatAsRead: (chatId: string) => void
   pinChat: (chatId: string) => void
@@ -81,6 +98,8 @@ interface AppContextType {
   muteChat: (chatId: string, hours: number) => void
   unmuteChat: (chatId: string) => void
   deleteChat: (chatId: string) => void
+  archiveChat: (chatId: string) => Promise<void>
+  unarchiveChat: (chatId: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   signup: (name: string, email: string, password: string) => Promise<void>
   logout: () => void
@@ -88,6 +107,11 @@ interface AppContextType {
   sendFriendRequest: (email: string) => Promise<void>
   respondToFriendRequest: (requestId: string, status: "accepted" | "rejected") => Promise<void>
   clearChat: (chatId: string) => Promise<void>
+  forwardMessage: (messageId: string, toChatIds: string[]) => Promise<void>
+  blockUser: (userId: string) => Promise<void>
+  unblockUser: (userId: string) => Promise<void>
+  mutateMessages: () => void
+  mutateChats: () => void
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
@@ -97,20 +121,19 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
   const [isDarkMode, setIsDarkModeState] = useState(false)
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null)
-
+  const [selectedChat, setSelectedChatState] = useState<Chat | null>(null)
+  const socketRef = useRef<any>(null)
 
   const { data: chatsData, mutate: mutateChats } = useSWR(
     currentUser ? `/api/chats?userId=${currentUser.id}` : null,
     fetcher,
-    { refreshInterval: 3000 }
+    { refreshInterval: 10000 } // Reduced polling — real-time via socket
   )
-
 
   const { data: messagesData, mutate: mutateMessages } = useSWR(
     selectedChat && currentUser ? `/api/messages?chatId=${selectedChat.id}&userId=${currentUser.id}` : null,
     fetcher,
-    { refreshInterval: 1000 }
+    { refreshInterval: 0 } // Disable polling — socket handles this
   )
 
   const chats: Chat[] = chatsData || []
@@ -119,8 +142,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     messages.set(selectedChat.id, messagesData)
   }
 
+  // ─── Load persisted user + theme ─────────────────────────────────────────
   useEffect(() => {
-
     const storedUser = localStorage.getItem("connectup-user")
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser))
@@ -133,6 +156,95 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // ─── Socket.IO real-time event listeners ─────────────────────────────────
+  useEffect(() => {
+    if (!currentUser) return
+
+    // Lazily import to avoid SSR issues
+    import("@/lib/socket").then(({ getSocket }) => {
+      const socket = getSocket()
+      socketRef.current = socket
+
+      socket.emit("register-user", currentUser.id)
+
+      socket.on("message:new", ({ chatId, message }: { chatId: string; message: any }) => {
+        // Trigger re-fetch only if we're in this chat
+        mutateMessages()
+        mutateChats()
+
+        // Browser notification if not focused
+        if (document.hidden && Notification.permission === "granted") {
+          new Notification(message.senderName || "New message", {
+            body: message.text || "📎 Attachment",
+            icon: "/icon.png"
+          })
+        }
+      })
+
+      socket.on("message:deletedForEveryone", ({ chatId, messageId }: any) => {
+        mutateMessages()
+        mutateChats()
+      })
+
+      socket.on("message:reaction", () => {
+        mutateMessages()
+      })
+
+      socket.on("message:read", ({ chatId }: any) => {
+        mutateMessages()
+        mutateChats()
+      })
+
+      socket.on("user:status", ({ userId, status, lastSeen }: { userId: string; status: string; lastSeen?: Date }) => {
+        mutateChats()
+      })
+
+      return () => {
+        socket.off("message:new")
+        socket.off("message:deletedForEveryone")
+        socket.off("message:reaction")
+        socket.off("message:read")
+        socket.off("user:status")
+      }
+    })
+  }, [currentUser])
+
+  // ─── Request notification permission on login ─────────────────────────────
+  useEffect(() => {
+    if (currentUser && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission()
+    }
+  }, [currentUser])
+
+  // ─── Auto join/leave socket chat room ─────────────────────────────────────
+  useEffect(() => {
+    if (!socketRef.current) return
+    if (selectedChat) {
+      socketRef.current.emit("join-chat", selectedChat.id)
+      // Auto-mark as read when opening chat
+      if (selectedChat.unreadCount > 0 && currentUser) {
+        markChatAsRead(selectedChat.id)
+      }
+    }
+    return () => {
+      if (selectedChat) {
+        socketRef.current?.emit("leave-chat", selectedChat.id)
+      }
+    }
+  }, [selectedChat?.id])
+
+  // ─── Clear selectedChat if deleted ───────────────────────────────────────
+  useEffect(() => {
+    if (selectedChat && chatsData && chatsData.length > 0) {
+      const chatExists = chatsData.find((c: any) => c.id === selectedChat.id)
+      if (!chatExists) {
+        setSelectedChatState(null)
+      }
+    } else if (chatsData && chatsData.length === 0 && selectedChat) {
+      setSelectedChatState(null)
+    }
+  }, [chatsData, selectedChat])
+
   const setIsDarkMode = useCallback((dark: boolean) => {
     setIsDarkModeState(dark)
     if (dark) {
@@ -143,18 +255,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("theme", dark ? "dark" : "light")
   }, [])
 
-  // Clear selectedChat if it's not in the current chats list (phantom chat fix)
-  useEffect(() => {
-    if (selectedChat && chatsData && chatsData.length > 0) {
-      const chatExists = chatsData.find((c: any) => c.id === selectedChat.id)
-      if (!chatExists) {
-        setSelectedChat(null)
-      }
-    } else if (chatsData && chatsData.length === 0 && selectedChat) {
-      setSelectedChat(null)
-    }
-  }, [chatsData, selectedChat])
+  const setSelectedChat = useCallback((chat: Chat | null) => {
+    setSelectedChatState(chat)
+  }, [])
 
+  // ─── Auth ─────────────────────────────────────────────────────────────────
   const login = async (email: string, password: string) => {
     const res = await fetch("/api/auth", {
       method: "POST",
@@ -186,12 +291,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => {
+    if (socketRef.current) {
+      socketRef.current.disconnect()
+      socketRef.current = null
+    }
     setCurrentUser(null)
     localStorage.removeItem("connectup-user")
-    setSelectedChat(null)
+    setSelectedChatState(null)
   }
 
-  const sendMessage = async (chatId: string, text: string, type = "text", attachment?: any, location?: { latitude: number; longitude: number; address?: string }) => {
+  // ─── Messages ─────────────────────────────────────────────────────────────
+  const sendMessage = async (
+    chatId: string,
+    text: string,
+    type = "text",
+    attachment?: any,
+    location?: any,
+    replyTo?: string
+  ) => {
     if (!currentUser) return
 
     try {
@@ -202,13 +319,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         type,
       }
 
-      if (attachment) {
-        messageData.attachment = attachment
-      }
-
-      if (location) {
-        messageData.location = location
-      }
+      if (attachment) messageData.attachment = attachment
+      if (location) messageData.location = location
+      if (replyTo) messageData.replyTo = replyTo
 
       const res = await fetch("/api/messages", {
         method: "POST",
@@ -217,55 +330,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       })
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to send message");
+        const errorData = await res.json()
+        throw new Error(errorData.error || "Failed to send message")
+      }
+
+      const savedMessage = await res.json()
+
+      // Emit via socket for real-time delivery to other user
+      if (socketRef.current) {
+        socketRef.current.emit("message:send", {
+          chatId,
+          message: { ...savedMessage, senderName: currentUser.name }
+        })
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
-
+      console.error("Failed to send message:", error)
     }
     mutateMessages()
     mutateChats()
   }
 
-  const createOrSelectChat = async (participantId: string) => {
+  const deleteMessage = async (chatId: string, messageId: string, forEveryone = false) => {
     if (!currentUser) return
 
-    const res = await fetch("/api/chats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ currentUserId: currentUser.id, participantId }),
-    })
-    const chat = await res.json()
-    mutateChats()
-    setSelectedChat(chat)
-  }
-
-  const deleteMessage = async (chatId: string, messageId: string) => {
-    await fetch(`/api/messages?id=${messageId}`, { method: "DELETE" })
-    mutateMessages()
-  }
-
-  const updateProfile = async (data: Partial<User>) => {
-    if (!currentUser) return
-    const res = await fetch("/api/users", {
+    await fetch("/api/messages", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: currentUser.id, ...data }),
+      body: JSON.stringify({
+        messageId,
+        userId: currentUser.id,
+        action: "delete",
+        data: { forEveryone }
+      }),
     })
-    const updatedUser = await res.json()
-    setCurrentUser(updatedUser)
-    localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+
+    if (forEveryone && socketRef.current) {
+      socketRef.current.emit("message:deleteForEveryone", { chatId, messageId })
+    }
+
+    mutateMessages()
+    mutateChats()
   }
-
-  const searchUsers = async (query: string) => {
-    const res = await fetch(`/api/users?query=${query}`)
-    return res.json()
-  }
-
-
-  const updateUserStatus = () => { }
-  const searchChats = (query: string) => chats.filter(c => c.participant.name.toLowerCase().includes(query.toLowerCase()))
 
   const editMessage = async (chatId: string, messageId: string, newText: string) => {
     await fetch("/api/messages", {
@@ -283,8 +388,47 @@ export function AppProvider({ children }: { children: ReactNode }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ chatId, userId: currentUser.id, action: "markAsRead" }),
     })
+    if (socketRef.current) {
+      socketRef.current.emit("message:read", { chatId, userId: currentUser.id })
+    }
     mutateChats()
     mutateMessages()
+  }
+
+  const forwardMessage = async (messageId: string, toChatIds: string[]) => {
+    if (!currentUser) return
+    for (const chatId of toChatIds) {
+      const res = await fetch("/api/messages/forward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId, chatId, senderId: currentUser.id }),
+      })
+      if (res.ok) {
+        const savedMessage = await res.json()
+        if (socketRef.current) {
+          socketRef.current.emit("message:send", {
+            chatId,
+            message: { ...savedMessage, senderName: currentUser.name }
+          })
+        }
+      }
+    }
+    mutateChats()
+    mutateMessages()
+  }
+
+  // ─── Chats ────────────────────────────────────────────────────────────────
+  const createOrSelectChat = async (participantId: string) => {
+    if (!currentUser) return
+
+    const res = await fetch("/api/chats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentUserId: currentUser.id, participantId }),
+    })
+    const chat = await res.json()
+    mutateChats()
+    setSelectedChatState(chat)
   }
 
   const pinChat = async (chatId: string) => {
@@ -336,7 +480,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     })
     mutateChats()
     if (selectedChat?.id === chatId) {
-      setSelectedChat(null)
+      setSelectedChatState(null)
     }
   }
 
@@ -359,6 +503,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ chatId, userId: currentUser.id, action: "archive" }),
     })
     mutateChats()
+    if (selectedChat?.id === chatId) {
+      setSelectedChatState(null)
+    }
   }
 
   const unarchiveChat = async (chatId: string) => {
@@ -371,11 +518,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
     mutateChats()
   }
 
+  // ─── Users ────────────────────────────────────────────────────────────────
+  const updateProfile = async (data: Partial<User>) => {
+    if (!currentUser) return
+    const res = await fetch("/api/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: currentUser.id, ...data }),
+    })
+    const updatedUser = await res.json()
+    setCurrentUser(updatedUser)
+    localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+  }
 
+  const searchUsers = async (query: string) => {
+    const res = await fetch(`/api/users?query=${query}`)
+    return res.json()
+  }
+
+  const blockUser = async (targetId: string) => {
+    if (!currentUser) return
+    const res = await fetch("/api/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: currentUser.id, action: "block", targetId }),
+    })
+    if (res.ok) {
+      const updatedUser = await res.json()
+      setCurrentUser(updatedUser)
+      localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+    }
+  }
+
+  const unblockUser = async (targetId: string) => {
+    if (!currentUser) return
+    const res = await fetch("/api/users", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: currentUser.id, action: "unblock", targetId }),
+    })
+    if (res.ok) {
+      const updatedUser = await res.json()
+      setCurrentUser(updatedUser)
+      localStorage.setItem("connectup-user", JSON.stringify(updatedUser))
+    }
+  }
+
+  const updateUserStatus = () => { }
+  const searchChats = (query: string) => chats.filter(c => c.participant.name.toLowerCase().includes(query.toLowerCase()))
+
+  // ─── Friend Requests ──────────────────────────────────────────────────────
   const { data: friendRequestsData, mutate: mutateFriendRequests } = useSWR(
     currentUser ? `/api/friend-requests?userId=${currentUser.id}` : null,
     fetcher,
-    { refreshInterval: 5000 }
+    { refreshInterval: 10000 }
   )
 
   const friendRequests: FriendRequest[] = friendRequestsData || []
@@ -417,7 +613,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     friendRequests,
     setCurrentUser,
     setIsDarkMode,
-    selectChat: setSelectedChat,
+    selectChat: setSelectedChatState,
     setSelectedChat,
     sendMessage,
     createOrSelectChat,
@@ -432,6 +628,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     muteChat,
     unmuteChat,
     deleteChat,
+    archiveChat,
+    unarchiveChat,
     login,
     signup,
     logout,
@@ -439,6 +637,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     sendFriendRequest,
     respondToFriendRequest,
     clearChat,
+    forwardMessage,
+    blockUser,
+    unblockUser,
+    mutateMessages,
+    mutateChats,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

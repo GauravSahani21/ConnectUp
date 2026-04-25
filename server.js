@@ -2,13 +2,20 @@ const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
+const mongoose = require('mongoose')
 
 const dev = process.env.NODE_ENV !== 'production'
-const hostname = 'localhost'
+const hostname = process.env.NODE_ENV === 'production' ? '0.0.0.0' : 'localhost'
 const port = process.env.PORT || 3000
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
+
+// Global Socket.IO instance so API routes can emit events
+let io
+
+const getIO = () => io
+module.exports.getIO = getIO
 
 app.prepare().then(() => {
   const httpServer = createServer(async (req, res) => {
@@ -22,7 +29,7 @@ app.prepare().then(() => {
     }
   })
 
-  const io = new Server(httpServer, {
+  io = new Server(httpServer, {
     path: '/socket.io',
     addTrailingSlash: false,
     cors: {
@@ -32,145 +39,161 @@ app.prepare().then(() => {
     }
   })
 
-  // Debug logging for Socket.IO
-  io.engine.on("connection_error", (err) => {
-    console.log("Socket.IO Connection Error:", err.req.url, err.code, err.message, err.context);
-  });
+  io.engine.on('connection_error', (err) => {
+    console.log('Socket.IO Connection Error:', err.req?.url, err.code, err.message)
+  })
 
-  const typingUsers = new Map() 
-  const userSockets = new Map() 
+  // Bidirectional maps: userId <-> socketId
+  const userSockets = new Map()   // userId -> socketId
+  const socketUsers = new Map()   // socketId -> userId
+
+  // Update user status in MongoDB
+  async function setUserStatus(userId, status) {
+    try {
+      const dbUrl = process.env.MONGODB_URI
+      if (!dbUrl || !userId) return
+
+      // Only update if mongoose is connected
+      if (mongoose.connection.readyState !== 1) return
+
+      const User = mongoose.models.User
+      if (!User) return
+
+      const update = { status }
+      if (status === 'offline') {
+        update.lastSeen = new Date()
+      }
+      await User.findByIdAndUpdate(userId, update)
+    } catch (err) {
+      // Non-fatal: don't crash the server
+      console.error('Status update error:', err.message)
+    }
+  }
 
   io.on('connection', (socket) => {
-    console.log('✅ Client connected successfully:', socket.id)
+    console.log('✅ Client connected:', socket.id)
 
-    
+    // ─── User registration ───────────────────────────────────────────────────
+    socket.on('register-user', async (userId) => {
+      if (!userId) return
+      userSockets.set(userId, socket.id)
+      socketUsers.set(socket.id, userId)
+      console.log(`User ${userId} registered with socket ${socket.id}`)
+
+      // Mark online
+      await setUserStatus(userId, 'online')
+
+      // Broadcast online status to all connected clients
+      io.emit('user:status', { userId, status: 'online' })
+    })
+
+    // ─── Chat rooms ──────────────────────────────────────────────────────────
     socket.on('join-chat', (chatId) => {
       socket.join(`chat:${chatId}`)
-      console.log(`Socket ${socket.id} joined chat:${chatId}`)
     })
 
-    
     socket.on('leave-chat', (chatId) => {
       socket.leave(`chat:${chatId}`)
-      console.log(`Socket ${socket.id} left chat:${chatId}`)
     })
 
-    
+    // ─── Typing indicators ───────────────────────────────────────────────────
     socket.on('typing', ({ chatId, userId, userName }) => {
-      
-      if (!typingUsers.has(chatId)) {
-        typingUsers.set(chatId, new Set())
-      }
-      typingUsers.get(chatId).add(userId)
-
-      
-      socket.to(`chat:${chatId}`).emit('userTyping', { 
-        chatId, 
-        userId, 
-        userName 
-      })
-      console.log(`User ${userName} (${userId}) is typing in chat ${chatId}`)
+      socket.to(`chat:${chatId}`).emit('userTyping', { chatId, userId, userName })
     })
 
-    
     socket.on('stopTyping', ({ chatId, userId, userName }) => {
-      
-      if (typingUsers.has(chatId)) {
-        typingUsers.get(chatId).delete(userId)
-        if (typingUsers.get(chatId).size === 0) {
-          typingUsers.delete(chatId)
-        }
-      }
-
-      
-      socket.to(`chat:${chatId}`).emit('userStoppedTyping', { 
-        chatId, 
-        userId 
-      })
-      console.log(`User ${userName} (${userId}) stopped typing in chat ${chatId}`)
+      socket.to(`chat:${chatId}`).emit('userStoppedTyping', { chatId, userId, userName })
     })
 
-    
-    
-    
-    socket.on('register-user', (userId) => {
-      userSockets.set(userId, socket.id)
-      console.log(`User ${userId} registered with socket ${socket.id}`)
+    // ─── Real-time message delivery ──────────────────────────────────────────
+    // Called from API route after saving to DB
+    socket.on('message:send', ({ chatId, message }) => {
+      // Broadcast to everyone in the room except the sender
+      socket.to(`chat:${chatId}`).emit('message:new', { chatId, message })
     })
 
-    
+    // ─── Delete for everyone ─────────────────────────────────────────────────
+    socket.on('message:deleteForEveryone', ({ chatId, messageId }) => {
+      socket.to(`chat:${chatId}`).emit('message:deletedForEveryone', { chatId, messageId })
+    })
+
+    // ─── Message reactions ─────────────────────────────────────────────────
+    socket.on('message:reaction', ({ chatId, messageId, userId, emoji }) => {
+      socket.to(`chat:${chatId}`).emit('message:reaction', { chatId, messageId, userId, emoji })
+    })
+
+    // ─── Read receipts ───────────────────────────────────────────────────────
+    socket.on('message:read', ({ chatId, userId }) => {
+      socket.to(`chat:${chatId}`).emit('message:read', { chatId, userId })
+    })
+
+    // ─── WebRTC Calls ────────────────────────────────────────────────────────
     socket.on('call:initiate', ({ callId, callerId, receiverId, callerName, callType }) => {
       const receiverSocket = userSockets.get(receiverId)
       if (receiverSocket) {
-        io.to(receiverSocket).emit('call:incoming', {
-          callId,
-          callerId,
-          callerName,
-          callType
-        })
+        io.to(receiverSocket).emit('call:incoming', { callId, callerId, callerName, callType })
         console.log(`Call initiated: ${callerId} -> ${receiverId} (${callType})`)
       }
     })
 
-    
     socket.on('call:answer', ({ callId, callerId }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
         io.to(callerSocket).emit('call:answered', { callId })
-        console.log(`Call answered: ${callId}`)
       }
     })
 
-    
     socket.on('call:reject', ({ callId, callerId }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
         io.to(callerSocket).emit('call:rejected', { callId })
-        console.log(`Call rejected: ${callId}`)
       }
     })
 
-    
     socket.on('call:end', ({ callId, userId, otherUserId }) => {
       const otherSocket = userSockets.get(otherUserId)
       if (otherSocket) {
         io.to(otherSocket).emit('call:ended', { callId })
-        console.log(`Call ended: ${callId}`)
       }
     })
 
-    
     socket.on('call:offer', ({ callId, receiverId, offer }) => {
       const receiverSocket = userSockets.get(receiverId)
       if (receiverSocket) {
         io.to(receiverSocket).emit('call:offer', { callId, offer })
-        console.log(`Call offer sent to ${receiverId}`)
       }
     })
 
-    
     socket.on('call:answer-sdp', ({ callId, callerId, answer }) => {
       const callerSocket = userSockets.get(callerId)
       if (callerSocket) {
         io.to(callerSocket).emit('call:answer-sdp', { callId, answer })
-        console.log(`Call answer sent to ${callerId}`)
       }
     })
 
-    
     socket.on('call:ice-candidate', ({ callId, userId, otherUserId, candidate }) => {
       const otherSocket = userSockets.get(otherUserId)
       if (otherSocket) {
         io.to(otherSocket).emit('call:ice-candidate', { callId, candidate })
-        console.log(`ICE candidate sent from ${userId} to ${otherUserId}`)
       }
     })
 
-    
-    socket.on('disconnect', () => {
+    // ─── Disconnect ──────────────────────────────────────────────────────────
+    socket.on('disconnect', async () => {
       console.log('Client disconnected:', socket.id)
-      
-      
+
+      const userId = socketUsers.get(socket.id)
+      if (userId) {
+        userSockets.delete(userId)
+        socketUsers.delete(socket.id)
+
+        // Mark offline in DB
+        await setUserStatus(userId, 'offline')
+
+        // Broadcast offline status to all clients
+        io.emit('user:status', { userId, status: 'offline', lastSeen: new Date() })
+        console.log(`User ${userId} marked offline`)
+      }
     })
   })
 

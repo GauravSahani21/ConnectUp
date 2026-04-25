@@ -1,160 +1,180 @@
 "use client"
 
 import { useApp } from "@/context/app-context"
-import { Phone, PhoneMissed, Video, Search } from "lucide-react"
+import { Phone, PhoneMissed, Video, Search, PhoneCall } from "lucide-react"
 import { useState, useEffect } from "react"
-import type { Message } from "@/context/app-context"
+import { useCall } from "@/context/call-context"
+
+interface CallRecord {
+  id: string
+  chatId: string
+  chatName: string
+  chatAvatar?: string
+  participantId: string
+  type: "audio" | "video"
+  status: "missed" | "rejected" | "completed" | "cancelled"
+  isOutgoing: boolean
+  duration: number
+  timestamp: Date
+}
 
 export default function CallsView() {
-    const [callHistory, setCallHistory] = useState<Array<Message & { chatName: string; chatAvatar?: string }>>([])
-    const { chats, messages } = useApp()
-    const [searchQuery, setSearchQuery] = useState("")
+  const { currentUser, chats } = useApp()
+  const { initiateCall } = useCall()
+  const [callHistory, setCallHistory] = useState<CallRecord[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(true)
 
-    
-    useEffect(() => {
-        const allCallMessages: Array<Message & { chatName: string; chatAvatar?: string }> = []
+  // Fetch call history from API (not from in-memory Map)
+  useEffect(() => {
+    if (!currentUser) return
 
-        chats.forEach(chat => {
-            const chatMessages = messages.get(chat.id) || []
-            const callMessages = chatMessages
-                .filter(msg => msg.type === "call")
-                .map(msg => ({
-                    ...msg,
-                    chatName: chat.participant.name,
-                    chatAvatar: chat.participant.avatar
-                }))
-
-            allCallMessages.push(...callMessages)
-        })
-
-        
-        allCallMessages.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-
-        setCallHistory(allCallMessages)
-    }, [chats, messages])
-
-    const filteredHistory = callHistory.filter(call =>
-        call.chatName.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-
-    const formatTime = (date: Date) => {
-        const now = new Date()
-        const callDate = new Date(date)
-        const diffMs = now.getTime() - callDate.getTime()
-        const diffDays = Math.floor(diffMs / 86400000)
-
-        if (diffDays === 0) {
-            return callDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        } else if (diffDays === 1) {
-            return "Yesterday"
-        } else if (diffDays < 7) {
-            return callDate.toLocaleDateString([], { weekday: 'long' })
-        } else {
-            return callDate.toLocaleDateString([], { month: 'short', day: 'numeric' })
+    const fetchCallHistory = async () => {
+      try {
+        setLoading(true)
+        const res = await fetch(`/api/messages/calls?userId=${currentUser.id}`)
+        if (res.ok) {
+          const data = await res.json()
+          setCallHistory(data)
         }
+      } catch (err) {
+        console.error("Failed to fetch call history:", err)
+      } finally {
+        setLoading(false)
+      }
     }
 
-    const getCallIcon = (msg: Message) => {
-        const meta = msg.callMetadata
-        if (!meta) return <Phone size={20} className="text-gray-600" />
+    fetchCallHistory()
+  }, [currentUser])
 
-        if (meta.status === "missed" && !meta.isOutgoing) {
-            return <PhoneMissed size={20} className="text-red-500" />
-        }
+  const filteredHistory = callHistory.filter(call =>
+    call.chatName.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-        if (meta.callType === "video") {
-            return <Video size={20} className="text-green-600" />
-        }
+  const formatTime = (date: Date | string) => {
+    const now = new Date()
+    const callDate = new Date(date)
+    const diffMs = now.getTime() - callDate.getTime()
+    const diffDays = Math.floor(diffMs / 86400000)
 
-        return <Phone size={20} className="text-green-600" />
+    if (diffDays === 0) {
+      return callDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    } else if (diffDays === 1) {
+      return "Yesterday"
+    } else if (diffDays < 7) {
+      return callDate.toLocaleDateString([], { weekday: "long" })
     }
+    return callDate.toLocaleDateString([], { month: "short", day: "numeric" })
+  }
 
-    const getCallStatusText = (msg: Message) => {
-        const meta = msg.callMetadata
-        if (!meta) return ""
+  const formatDuration = (seconds: number) => {
+    if (!seconds || seconds === 0) return ""
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }
 
-        if (meta.status === "missed" && !meta.isOutgoing) return "Missed"
-        if (meta.status === "rejected") return "Declined"
-        if (meta.status === "completed" && meta.duration > 0) {
-            const mins = Math.floor(meta.duration / 60)
-            const secs = meta.duration % 60
-            return `${mins}:${secs.toString().padStart(2, '0')}`
-        }
-        return meta.isOutgoing ? "Outgoing" : "Incoming"
+  const getCallIcon = (call: CallRecord) => {
+    if (call.status === "missed" && !call.isOutgoing) {
+      return <PhoneMissed size={18} className="text-red-500" />
     }
+    if (call.type === "video") {
+      return <Video size={18} className="text-green-600" />
+    }
+    return <Phone size={18} className="text-green-600" />
+  }
 
-    return (
-        <div className="w-full md:w-96 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-            {}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Calls</h1>
+  const getCallLabel = (call: CallRecord) => {
+    const arrow = call.isOutgoing ? "↗ " : "↙ "
+    if (call.status === "missed" && !call.isOutgoing) return <span className="text-red-500">↙ Missed</span>
+    if (call.status === "rejected") return <span className="text-orange-500">{arrow}Declined</span>
+    if (call.status === "completed" && call.duration > 0) {
+      return <span className="text-gray-600 dark:text-gray-400">{arrow}{formatDuration(call.duration)}</span>
+    }
+    return <span className="text-gray-500">{arrow}{call.isOutgoing ? "Outgoing" : "Incoming"}</span>
+  }
 
-                {}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search calls..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white"
-                    />
-                </div>
-            </div>
+  const handleCallBack = (call: CallRecord) => {
+    initiateCall(call.participantId, call.chatName, call.chatAvatar, call.type)
+  }
 
-            {}
-            <div className="flex-1 overflow-y-auto">
-                {filteredHistory.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                        <Phone size={64} className="mx-auto mb-4 opacity-50" />
-                        <p className="text-lg mb-2">No calls yet</p>
-                        <p className="text-sm">Your call history will appear here</p>
-                    </div>
-                ) : (
-                    filteredHistory.map((call) => (
-                        <div
-                            key={call.id}
-                            className={`p-4 border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition cursor-pointer flex items-center gap-4 ${call.callMetadata?.status === "missed" && !call.callMetadata.isOutgoing
-                                    ? "bg-red-50 dark:bg-red-900/10"
-                                    : ""
-                                }`}
-                        >
-                            {}
-                            <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
-                                {call.chatAvatar ? (
-                                    <img src={call.chatAvatar} alt={call.chatName} className="w-full h-full rounded-full object-cover" />
-                                ) : (
-                                    <span className="text-lg font-semibold text-gray-700 dark:text-gray-300">
-                                        {call.chatName[0].toUpperCase()}
-                                    </span>
-                                )}
-                            </div>
-
-                            {}
-                            <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-900 dark:text-white truncate flex items-center gap-2">
-                                    {call.chatName}
-                                    {call.callMetadata?.status === "missed" && !call.callMetadata.isOutgoing && (
-                                        <span className="text-xs text-red-500">(Missed)</span>
-                                    )}
-                                </p>
-                                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                                    {getCallIcon(call)}
-                                    <span className={call.callMetadata?.status === "missed" && !call.callMetadata.isOutgoing ? "text-red-600 dark:text-red-400" : ""}>
-                                        {call.callMetadata?.isOutgoing ? "↗ " : "↙ "}
-                                        {getCallStatusText(call)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {}
-                            <div className="text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                                {formatTime(call.timestamp)}
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
+  return (
+    <div className="w-full md:w-96 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">Calls</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search calls..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-white placeholder-gray-400"
+          />
         </div>
-    )
+      </div>
+
+      {/* Call list */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="p-8 text-center">
+            <div className="w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="text-sm text-gray-500">Loading calls...</p>
+          </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+            <Phone size={56} className="mx-auto mb-4 opacity-30" />
+            <p className="font-medium mb-1">No calls yet</p>
+            <p className="text-sm text-gray-400">Your call history will appear here</p>
+          </div>
+        ) : (
+          filteredHistory.map((call) => (
+            <div
+              key={call.id}
+              className={`px-4 py-3 border-b dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition flex items-center gap-3 group ${
+                call.status === "missed" && !call.isOutgoing ? "bg-red-50/50 dark:bg-red-900/5" : ""
+              }`}
+            >
+              {/* Avatar */}
+              <div className="w-11 h-11 rounded-full bg-gray-200 dark:bg-gray-600 flex-shrink-0 overflow-hidden">
+                {call.chatAvatar ? (
+                  <img src={call.chatAvatar} alt={call.chatName} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold text-lg">
+                    {call.chatName[0]?.toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-white truncate text-sm">{call.chatName}</p>
+                <div className="flex items-center gap-1.5 text-xs mt-0.5">
+                  {getCallIcon(call)}
+                  {getCallLabel(call)}
+                </div>
+              </div>
+
+              {/* Time + callback */}
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-xs text-gray-400">{formatTime(call.timestamp)}</span>
+                <button
+                  onClick={() => handleCallBack(call)}
+                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full transition"
+                  title={`${call.type === "video" ? "Video" : "Voice"} call back`}
+                >
+                  {call.type === "video" ? (
+                    <Video size={14} className="text-green-600" />
+                  ) : (
+                    <PhoneCall size={14} className="text-green-600" />
+                  )}
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
 }

@@ -87,9 +87,21 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Invalid action" }, { status: 400 })
     } catch (error) {
         console.error("Auth API Error:", error)
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Internal server error" },
-            { status: 500 }
-        )
+
+        // Friendly error messages for common DB issues
+        const raw = error instanceof Error ? error.message : ""
+        let friendly = "An unexpected error occurred. Please try again."
+
+        if (raw.includes("ENOTFOUND") || raw.includes("querySrv") || raw.includes("connect")) {
+            friendly = "Cannot connect to the database. Please check your MongoDB connection string in .env.local and ensure the password is set correctly."
+        } else if (raw.includes("authentication failed") || raw.includes("bad auth")) {
+            friendly = "Database authentication failed. Please verify your MongoDB username and password in .env.local."
+        } else if (raw.includes("ECONNREFUSED")) {
+            friendly = "Database server refused connection. Make sure MongoDB is running."
+        } else if (raw.length > 0 && raw.length < 200) {
+            friendly = raw
+        }
+
+        return NextResponse.json({ error: friendly }, { status: 500 })
     }
 }

@@ -71,13 +71,16 @@ export async function POST(req: Request) {
             })
 
             // Notify Sender (Confirmation)
-            import("@/lib/email").then(({ sendEmail, generateFriendRequestSentEmail }) => {
-                sendEmail({
-                    to: sender.email,
-                    subject: `Friend Request Sent to ${receiver.name}`,
-                    html: generateFriendRequestSentEmail(receiver.name)
-                }).catch(err => console.error("Sender confirmation email failed:", err))
-            })
+            sendEmail({
+                to: sender.email,
+                subject: `Friend Request Sent to ${receiver.name}`,
+                html: generateFriendRequestEmail({
+                    name: receiver.name,
+                    email: receiver.email,
+                    bio: receiver.bio,
+                    avatar: receiver.avatar
+                })
+            }).catch(err => console.error("Sender confirmation email failed:", err))
         }
 
         return NextResponse.json({ success: true, request })

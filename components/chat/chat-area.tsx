@@ -13,13 +13,18 @@ export default function ChatArea() {
   const { socket } = useSocket()
   const [replyTo, setReplyTo] = useState<any>(null)
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set())
-
+  const [searchQuery, setSearchQuery] = useState("")
 
   const activeChat = useMemo(() =>
     chats.find(c => c.id === selectedChat?.id) || selectedChat,
     [chats, selectedChat]
   )
 
+  // Clear search when switching chats
+  useEffect(() => {
+    setSearchQuery("")
+    setReplyTo(null)
+  }, [selectedChat?.id])
 
   useEffect(() => {
     if (!socket || !selectedChat) return
@@ -49,7 +54,6 @@ export default function ChatArea() {
     }
   }, [socket, selectedChat, currentUser])
 
-
   useEffect(() => {
     setTypingUsers(new Set())
   }, [selectedChat?.id])
@@ -62,9 +66,14 @@ export default function ChatArea() {
   const isTyping = typingUsers.size > 0
 
   return (
-    <div className="flex flex-col w-full h-full max-h-full bg-gradient-to-b from-white to-gray-50 dark:from-slate-800 dark:to-slate-900 overflow-hidden">
-      <ChatHeader />
-      <MessageList messages={chatMessages} isTyping={isTyping} onReply={setReplyTo} />
+    <div className="flex flex-col w-full h-full max-h-full bg-[#efeae2] dark:bg-[#0b141a] overflow-hidden">
+      <ChatHeader onSearchChange={setSearchQuery} />
+      <MessageList
+        messages={chatMessages}
+        isTyping={isTyping}
+        onReply={setReplyTo}
+        searchQuery={searchQuery}
+      />
       <MessageInputEnhanced
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}
