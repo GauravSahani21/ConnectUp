@@ -61,11 +61,8 @@ export default function LoginForm({ onToggle }: LoginFormProps) {
             <div className="flex items-start gap-3">
               <Database size={18} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Database not connected</p>
-                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                  Open <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">.env.local</code> and replace{" "}
-                  <code className="bg-amber-100 dark:bg-amber-900/50 px-1 rounded">&lt;db_password&gt;</code> with your MongoDB Atlas password.
-                </p>
+                <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-1">Connection error</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">{error}</p>
               </div>
             </div>
           </div>
