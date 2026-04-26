@@ -205,5 +205,37 @@ app.prepare().then(() => {
     .listen(port, () => {
       console.log(`> Ready on http://${hostname}:${port}`)
       console.log(`> Socket.io server running`)
+
+      // ─── Keep-Alive Scheduler ─────────────────────────────────────────────
+      // Render's free tier spins down servers after ~15 min of inactivity.
+      // We self-ping every 10 minutes so the instance stays warm.
+      if (process.env.NODE_ENV === 'production') {
+        const https = require('https')
+        const http  = require('http')
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || `http://localhost:${port}`
+        const pingUrl = `${appUrl}/api/ping`
+        const PING_INTERVAL_MS = 10 * 60 * 1000 // 10 minutes
+
+        const pingServer = () => {
+          const client = pingUrl.startsWith('https') ? https : http
+          const req = client.get(pingUrl, (res) => {
+            console.log(`[keep-alive] Pinged ${pingUrl} → ${res.statusCode}`)
+          })
+          req.on('error', (err) => {
+            console.warn('[keep-alive] Ping failed:', err.message)
+          })
+          req.end()
+        }
+
+        // Wait 30 seconds after boot before the first ping, then every 10 min
+        setTimeout(() => {
+          pingServer()
+          setInterval(pingServer, PING_INTERVAL_MS)
+        }, 30_000)
+
+        console.log(`> Keep-alive scheduler started (pinging every 10 min)`)
+      }
+      // ─────────────────────────────────────────────────────────────────────
     })
 })
