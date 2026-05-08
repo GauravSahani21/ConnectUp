@@ -1,4 +1,5 @@
 # ConnectUp 💬
+live: https://connectup-j8fy.onrender.com/
 
 A modern, feature-rich real-time chat application built with Next.js, Socket.IO, and MongoDB. Connect with friends instantly through messaging, voice/video calls, and more.
 
